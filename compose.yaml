@@ -7,7 +7,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: otdb
-      MYSQL_USER: symfony
+      MYSQL_USER: symfonyOT
       MYSQL_PASSWORD: OT
     volumes:
       - mariadb_data:/var/lib/mysql
@@ -19,7 +19,7 @@ services:
     container_name: pmaOT
     environment:
       PMA_HOST: mariadb
-      PMA_USER: symfony
+      PMA_USER: symfonyOT
       PMA_PASSWORD: OT
       UPLOAD_LIMIT: 64M
     ports:
