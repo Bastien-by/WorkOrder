@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des PDF{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Liste des PDF disponibles</h1>
+    <ul>
+        {% for pdfFile in pdfFiles %}
+            <li>
+                <a href="{{ path('view_pdf', {'filename': pdfFile}) }}" target="_blank">
+                    {{ pdfFile }}
+                </a>
+            </li>
+        {% else %}
+            <li>Aucun fichier PDF trouvé.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

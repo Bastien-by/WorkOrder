@@ -18,7 +18,7 @@ class WorkOrder
     private ?string $technician_name = null;
 
     #[ORM\Column(length: 30)]
-    private ?string $maitenance_type = null;
+    private ?string $maintenance_type = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $intervention_date = null;
@@ -29,23 +29,23 @@ class WorkOrder
     #[ORM\Column(length: 30, nullable: true)]
     private ?string $technical_position = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $downtime_start_time = null;
+    #[ORM\Column(type: 'time', nullable: true)]
+    private ?\DateTime $downtime_start_time = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $downtime_end_time = null;
+    #[ORM\Column(type: 'time', nullable: true)]
+    private ?\DateTime $downtime_end_time = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $intervention_start_time = null;
+    #[ORM\Column(type: 'time', nullable: true)]
+    private ?\DateTime $intervention_start_time = null;
 
-    #[ORM\Column]
-    private ?\DateTimeImmutable $intervention_end_time = null;
+    #[ORM\Column(type: 'time', nullable: true)]
+    private ?\DateTime $intervention_end_time = null;
 
     #[ORM\Column(length: 30)]
     private ?string $field_intervention = null;
 
     #[ORM\Column(length: 30)]
-    private ?string $intervention_resquester = null;
+    private ?string $intervention_requester = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $intervention_request_date = null;
@@ -103,14 +103,14 @@ class WorkOrder
         return $this;
     }
 
-    public function getMaitenanceType(): ?string
+    public function getMaintenanceType(): ?string
     {
-        return $this->maitenance_type;
+        return $this->maintenance_type;
     }
 
-    public function setMaitenanceType(string $maitenance_type): static
+    public function setMaintenanceType(string $maintenance_type): static
     {
-        $this->maitenance_type = $maitenance_type;
+        $this->maintenance_type = $maintenance_type;
 
         return $this;
     }
@@ -151,51 +151,47 @@ class WorkOrder
         return $this;
     }
 
-    public function getDowntimeStartTime(): ?\DateTimeImmutable
+    public function getDowntimeStartTime(): ?\DateTime
     {
         return $this->downtime_start_time;
     }
 
-    public function setDowntimeStartTime(\DateTimeImmutable $downtime_start_time): static
+    public function setDowntimeStartTime(?\DateTime $downtime_start_time): self
     {
         $this->downtime_start_time = $downtime_start_time;
-
         return $this;
     }
 
-    public function getDowntimeEndTime(): ?\DateTimeImmutable
+    public function getDowntimeEndTime(): ?\DateTime
     {
         return $this->downtime_end_time;
     }
 
-    public function setDowntimeEndTime(\DateTimeImmutable $downtime_end_time): static
+    public function setDowntimeEndTime(?\DateTime $downtime_end_time): self
     {
         $this->downtime_end_time = $downtime_end_time;
-
         return $this;
     }
 
-    public function getInterventionStartTime(): ?\DateTimeImmutable
+    public function getInterventionStartTime(): ?\DateTime
     {
         return $this->intervention_start_time;
     }
 
-    public function setInterventionStartTime(\DateTimeImmutable $intervention_start_time): static
+    public function setInterventionStartTime(?\DateTime $intervention_start_time): self
     {
         $this->intervention_start_time = $intervention_start_time;
-
         return $this;
     }
 
-    public function getInterventionEndTime(): ?\DateTimeImmutable
+    public function getInterventionEndTime(): ?\DateTime
     {
         return $this->intervention_end_time;
     }
 
-    public function setInterventionEndTime(\DateTimeImmutable $intervention_end_time): static
+    public function setInterventionEndTime(?\DateTime $intervention_end_time): self
     {
         $this->intervention_end_time = $intervention_end_time;
-
         return $this;
     }
 
@@ -211,14 +207,14 @@ class WorkOrder
         return $this;
     }
 
-    public function getInterventionResquester(): ?string
+    public function getInterventionRequester(): ?string
     {
-        return $this->intervention_resquester;
+        return $this->intervention_requester;
     }
 
-    public function setInterventionResquester(string $intervention_resquester): static
+    public function setInterventionRequester(string $intervention_requester): static
     {
-        $this->intervention_resquester = $intervention_resquester;
+        $this->intervention_requester = $intervention_requester;
 
         return $this;
     }

@@ -3,17 +3,18 @@
 namespace App\Form;
 
 use App\Entity\WorkOrder;
-use Doctrine\DBAL\Types\BooleanType;
-use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Text;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TimeType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Test\TypeTestCase;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class MaintenanceType extends AbstractType
+class WorkOrderType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -32,8 +33,8 @@ class MaintenanceType extends AbstractType
                 'label' => "Date de l'intervention",
                 'required' => true,
                 'widget' => 'single_text',
+                'input' => 'datetime_immutable',
                 'attr' => ['class' => 'form-control'],
-                'format' => 'dd-MM-yyyy',
             ])
             ->add('machine_name', TextType::class, [
                 'label' => "Nom de la machine",
@@ -45,33 +46,29 @@ class MaintenanceType extends AbstractType
                 'required' => false,
                 'attr' => ['class' => 'format-control'],
             ])
-            ->add('downtime_start_time', DateType::class,[
+            ->add('downtime_start_time', TimeType::class,[
                 'label' => 'Heure début panne',
                 'required' => true,
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
-                'format' => 'dd-MM-yyyy',
             ])
-            ->add('downtime_end_time', DateType::class,[
+            ->add('downtime_end_time', TimeType::class,[
                 'label' => 'Heure fin panne',
                 'required' => true,
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
-                'format' => 'dd-MM-yyyy',
             ])
-            ->add('intervention_start_time', DateType::class,[
+            ->add('intervention_start_time', TimeType::class,[
                 'label' => 'Heure début intervention',
                 'required' => true,
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
-                'format' => 'dd-MM-yyyy',
             ])
-            ->add('intervention_end_time', DateType::class,[
+            ->add('intervention_end_time', TimeType::class,[
                 'label' => 'Heure fin panne',
                 'required' => true,
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
-                'format' => 'dd-MM-yyyy',
             ])
             ->add('field_intervention', TextType::class,[
                 'label' => "Domaine d'intervention",
@@ -87,18 +84,21 @@ class MaintenanceType extends AbstractType
                 'label' => "Date de l'intervention",
                 'required' => true,
                 'widget' => 'single_text',
+                'input' => 'datetime_immutable',
                 'attr' => ['class' => 'form-control'],
-                'format' => 'dd-MM-yyyy',
             ])
-            ->add('technical_details', TextType::class,[
+            ->add('technical_details', TextareaType::class,[
                 'label' => 'Descriprition technique',
                 'required' => false,
                 'attr' => ['class' => 'form-control'],
             ])
-            ->add('piece_issued', BooleanType::class,[
+            ->add('piece_issued', CheckboxType::class,[
                 'label' => "Pièce sortie ?",
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+            ])
+            ->add('piece_type', TextType::class,[
+                'label' => "Type de pièce",
+                'required' => true,
             ])
             ->add('piece_brand', TextType::class,[
                 'label' => 'Marque/Fabricant',
@@ -140,7 +140,7 @@ class MaintenanceType extends AbstractType
                 'required' => true,
                 'attr' => ['class' => 'form-control'],
             ])
-            ->add('additional_details', TextType::class,[
+            ->add('additional_details', TextareaType::class,[
                 'label' => 'Description supplémentaire',
                 'required' => true,
                 'attr' => ['class' => 'form-control'],
