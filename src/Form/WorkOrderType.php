@@ -147,10 +147,13 @@ class WorkOrderType extends AbstractType
             ]);
     }
 
-    public function configureOptions(OptionsResolver $resolver): void
+    public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
             'data_class' => WorkOrder::class,
+            'csrf_protection' => true,  // Ensure CSRF protection is enabled
+            'csrf_field_name' => '_token',  // Default field name for CSRF
+            'csrf_token_id'   => 'work_order',  // Unique ID for this form
         ]);
     }
 }

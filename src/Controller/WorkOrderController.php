@@ -47,34 +47,128 @@ class WorkOrderController extends AbstractController
 
     private function generatePDF(WorkOrder $workOrder)
     {
-        // Créer un objet TCPDF
+
+        $machineName = $workOrder->getMachineName();
+        $interventionDate = $workOrder->getInterventionDate();
+
+        $id_ot = $workOrder->getId();
+        $interventionDate = $workOrder->getInterventionDate()->format('d_m_Y'); // Exemple : 2025-02-28
+        $interventionRequestDate = $workOrder->getInterventionRequestDate()->format('d_m_Y');
+        $downtime_start_time = $workOrder->getDowntimeStartTime()->format('H:i');
+        $downtime_end_time = $workOrder->getDowntimeEndTime()->format('H:i');
+        $intervention_start_time = $workOrder->getInterventionStartTime()->format('H:i');
+        $intervention_end_time = $workOrder->getInterventionEndTime()->format('H:i');
+
+        // Définir le chemin complet du fichier avec la date
+        $filePath = "/var/www/WorkOrder/pdfot/ot-$id_ot-$interventionDate-$machineName.pdf";
         $pdf = new TCPDF();
 
         // Ajouter une page
         $pdf->AddPage();
-
-        // Définir la police (par exemple, Helvetica, taille 12)
-        $pdf->SetFont('helvetica', '', 12);
-
+        $pdf->SetTextColor(14, 52, 113);
+        $pdf->Image($_SERVER['DOCUMENT_ROOT'] . '/images/OPMobility.jpg', 0, 14.55, 37.5, 15, 'JPG');
+        $pdf->Ln(9); // Saut de ligne
         // Ajouter un titre
-        $pdf->Cell(0, 10, 'Ordre de Travail', 0, 1, 'C');
+        $pdf->SetFont('helvetica', '', 20);
+        $pdf->Cell(200, 10, 'Ordre de Maintenance tracking 2025', 0, 1, 'C');
 
-        // Ajouter des informations à partir de l'objet WorkOrder
+        $pdf->SetFont('helvetica', '', 15);
+        // Tester les positions sans remplir les champs du formulaire
+        $pdf->Ln(12); // Saut de ligne
+        $pdf->Cell(95, 10, 'Nom(s) Intervenants:', 0, 0, 'C');
+        $pdf->Cell(95, 10, 'Nom Machine/Secteur:', 0, 1, 'C');
+        $pdf->Cell(95, 10, '' . $workOrder->getTechnicianName(), 0, 0, 'C');
+        $pdf->Cell(95, 10, '' . $workOrder->getMachineName(), 0, 1, 'C');
         $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, 'Type Maintenance:', 0, 0, 'C');
+        $pdf->Cell(95, 10, 'Poste Technique:', 0, 1, 'C');
+        $pdf->Cell(95, 10, '' . $workOrder->getMaintenanceType() , 0, 0, 'C');
+        $pdf->Cell(95, 10, '' . $workOrder->getTechnicalPosition(), 0, 1, 'C');
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(0, 10, "Date d'Intervention:", 0, 1, 'C');
+        $pdf->Cell(0, 10, "" . $interventionDate, 0, 1, 'C');
 
-        // Exemple d'ajout de données du formulaire
-        $pdf->Cell(0, 10, 'Technician Name: ' . $workOrder->getTechnicianName(), 0, 1);
-        $pdf->Cell(0, 10, 'Machine Name: ' . $workOrder->getMachineName(), 0, 1);
-        $pdf->Cell(0, 10, 'Maintenance Type: ' . $workOrder->getMaintenanceType(), 0, 1);
-        $pdf->Cell(0, 10, 'Technical Position: ' . $workOrder->getTechnicalPosition(), 0, 1);
-        $pdf->Cell(0, 10, 'Intervention Date: ' . $workOrder->getInterventionDate()->format('Y-m-d'), 0, 1);
+        $pdf->Ln(12); // Saut de ligne
+        // Ajouter un titre
+        $pdf->SetFont('helvetica', '', 20);
+        $pdf->Cell(0, 10, 'Durée Panne/Intervention', 0, 1, 'C');
 
-        // Ajouter d'autres champs si nécessaire
-        // $pdf->Cell(0, 10, 'Another Field: ' . $workOrder->getSomeField(), 0, 1);
+        $pdf->SetFont('helvetica', '', 15);
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, 'Heure Début Panne: ' . $downtime_start_time, 0, 0, 'C');
+        $pdf->Cell(95, 10, 'Heure Début Intervention: ' . $intervention_start_time, 0, 1, 'C');
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, 'Heure Fin Panne: ' . $downtime_end_time, 0, 0, 'C');
+        $pdf->Cell(95, 10, 'Heure Fin Intervention: ' . $intervention_end_time, 0, 1, 'C');
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, 'Durée Panne: ', 0, 0, 'C');
+        $pdf->Cell(95, 10, 'Durée Intervention: ', 0, 1, 'C');
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(0, 10, "Domaine d'Intervention:", 0, 1, 'C');
+        $pdf->Cell(0, 10, "" . $workOrder->getFieldIntervention(), 0, 1, 'C');
 
-        // Générer le PDF (enregistrer dans le fichier ou l'afficher)
+        $pdf->Ln(12); // Saut de ligne
+        // Ajouter un titre
+        $pdf->SetFont('helvetica', '', 20);
+        $pdf->Cell(0, 10, "Demande Intervention", 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', '', 15);
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, "Demandeur Intervention: ". $workOrder->getInterventionRequester(), 0, 0, 'C');
+        $pdf->Cell(95, 10, "Date Demande Intervention: " . $interventionRequestDate, 0, 1, 'C');
+
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(0, 10, "Description Technique Identifiée", 0, 1, 'C');
+        $pdf->MultiCell(0, 10, '' . $workOrder->getTechnicalDetails(), 1, 'C');
+
+        $pdf->Ln(20); // Saut de ligne
+        // Ajouter un titre
+        $pdf->SetFont('helvetica', '', 20);
+        $pdf->Cell(0, 10, "Descriptif Intervention Technique", 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', '', 15);
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(0, 10, "Description Technique Identifiée", 0, 1, 'C');
+        $pdf->MultiCell(0, 10, 'Test en manuel, Petite vitesse , OK ,pas de bruit, Vitesse de production, bruit audible, Reglage Tension courroie et test ,Bruit disparu, Changement de courroie a prévoir , pas de stock', 1, 'C');
+
+        $pdf->Ln(12); // Saut de ligne
+        // Ajouter un titre
+        $pdf->SetFont('helvetica', '', 20);
+        $pdf->Cell(0, 10, "Gestion Magasin", 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', '', 15);
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, "Sortie Pièces: " . $workOrder->isPieceIssued(), 0, 0, 'C');
+        $pdf->Cell(95, 10, "Si NON: Pièces non crées", 0, 1, 'C');
+        $pdf->Cell(95, 10, "Type de Pièces: " . $workOrder->getPieceType(), 0, 0, 'C');
+        $pdf->Cell(95, 10, "Marque Fabricant: " . $workOrder->getPieceBrand(), 0, 1, 'C');
+        $pdf->Cell(95, 10, "Référence SAP: " . $workOrder->getSapReference(), 0, 0, 'C');
+        $pdf->Cell(95, 10, "Quantité: " . $workOrder->getQuantity(), 0, 1, 'C');
+
+        $pdf->Ln(12); // Saut de ligne
+        // Ajouter un titre
+        $pdf->SetFont('helvetica', '', 20);
+        $pdf->Cell(0, 10, "Détails pièces à créer", 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', '', 15);
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, "Marque : " . $workOrder->getBrand(), 0, 0, 'C');
+        $pdf->Cell(95, 10, "Type : " . $workOrder->getType(), 0, 1, 'C');
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(95, 10, "Ref Fabricant : " . $workOrder->getManufacturerReference(), 0, 0, 'C');
+        $pdf->Cell(95, 10, "Dimension : " . $workOrder->getSize(), 0, 1, 'C');
+        $pdf->Ln(5); // Saut de ligne
+        $pdf->Cell(0, 10, "Quantité : " . $workOrder->getCreatedPieceQuantity(), 0, 1, 'C');
+
+        $pdf->Cell(0, 10, "Descriptif supplémentaire :", 0, 1, 'C');
+        $pdf->MultiCell(0, 10, '' . $workOrder->getAdditionalDetails(), 1, 'C');
+
+        // Générer le PDF et l'afficher dans le navigateur
+        //$pdfContent = $pdf->Output('', 'S'); // Générer le PDF sans le sauvegarder
+
+        
         // Enregistrer le fichier
-        $pdf->Output('/var/www/WorkOrder/pdfot/ordre_de_travail.pdf', 'F'); // F pour enregistrer sur le serveur
+        $pdf->Output($filePath, 'F'); // F pour enregistrer sur le serveur
 
         // Ou afficher le PDF directement dans le navigateur
         //$pdf->Output('ordre_de_travail.pdf', 'I'); // I pour afficher dans le navigateur

@@ -33,20 +33,26 @@ class PdfController extends AbstractController
         ]);
     }
 
-    // Une autre méthode pour afficher le PDF en cliquant
     #[Route('/view-pdf/{filename}', name: 'view_pdf')]
     public function viewPdf(string $filename): Response
     {
-        // Le répertoire où les fichiers sont stockés
-        $pdfDirectory = '/var/www/WorkOrder/pdfot'; // Remplace par ton répertoire
+    // Le répertoire où les fichiers sont stockés
+    $pdfDirectory = '/var/www/WorkOrder/pdfot'; // Remplace par ton répertoire
 
-        // Vérifier si le fichier PDF existe
-        $pdfPath = $pdfDirectory . '/' . $filename;
-        if (!file_exists($pdfPath)) {
-            throw $this->createNotFoundException('Le fichier PDF n\'existe pas.');
-        }
-
-        // Retourner le fichier PDF pour qu'il s'affiche dans le navigateur
-        return $this->file($pdfPath);
+    // Vérifier si le fichier PDF existe
+    $pdfPath = $pdfDirectory . '/' . $filename;
+    if (!file_exists($pdfPath)) {
+        throw $this->createNotFoundException('Le fichier PDF n\'existe pas.');
     }
+
+    // Lire le fichier PDF
+    $pdfContent = file_get_contents($pdfPath);
+
+    // Retourner la réponse avec les bons en-têtes pour afficher le PDF
+    return new Response($pdfContent, 200, [
+        'Content-Type'        => 'application/pdf',
+        'Content-Disposition' => 'inline; filename="' . $filename . '"'
+    ]);
+}
+
 }

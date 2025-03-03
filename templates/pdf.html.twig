@@ -4,7 +4,7 @@
 
 {% block body %}
 <div class="container mt-4">
-    <h1>Liste des PDF disponibles</h1>
+    <h1>Liste des ordres de travail disponible(s)</h1>
     <ul>
         {% for pdfFile in pdfFiles %}
             <li>
@@ -13,7 +13,7 @@
                 </a>
             </li>
         {% else %}
-            <li>Aucun fichier PDF trouvé.</li>
+            <li>Aucun fichier trouvé.</li>
         {% endfor %}
     </ul>
 </div>
