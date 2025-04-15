@@ -65,7 +65,7 @@ class WorkOrderType extends AbstractType
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('intervention_end_time', TimeType::class,[
-                'label' => 'Heure fin panne',
+                'label' => 'Heure fin intervention',
                 'required' => true,
                 'widget' => 'single_text',
                 'attr' => ['class' => 'form-control'],
