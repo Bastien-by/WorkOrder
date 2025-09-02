@@ -10,7 +10,10 @@
           <a class="nav-link {% if app.request.attributes.get('_route') == 'home.index' %}active{% endif %}" href="{{ path('home.index') }}">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if app.request.attributes.get('_route') == 'work_order_generator' %}active{% endif %}" href="{{ path('work_order_generator') }}">Générer</a>
+          <a class="nav-link {% if app.request.attributes.get('_route') == 'work_order_generator' %}active{% endif %}" href="{{ path('work_order_generator') }}">Ouvrir OT</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if app.request.attributes.get('_route') starts with 'work_order_edit' %}active{% endif %}" href="{{ path('work_order_edit_list') }}">Fermer OT</a>
         </li>
         <li class="nav-item">
           <a class="nav-link {% if app.request.attributes.get('_route') == 'list_pdfs' %}active{% endif %}" href="{{ path('list_pdfs') }}">Liste</a>

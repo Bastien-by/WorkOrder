@@ -1,20 +1,99 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Liste des PDF{% endblock %}
+{% block title %}Liste des OT PDF{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1>Liste des ordres de travail disponible(s)</h1>
-    <ul>
-        {% for pdfFile in pdfFiles %}
-            <li>
-                <a href="{{ path('view_pdf', {'filename': pdfFile}) }}" target="_blank">
-                    {{ pdfFile }}
-                </a>
-            </li>
-        {% else %}
-            <li>Aucun fichier trouvé.</li>
-        {% endfor %}
-    </ul>
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Liste des Ordres de Travail</h1>
+
+    {# Barre de filtres #}
+    <form method="get" class="row mb-4">
+        <div class="col-md-3">
+            <label for="requester" class="form-label">Demandeur</label>
+            <select id="requester" name="requester" class="form-select">
+                <option value="">Tous</option>
+                {% for requester in requesters %}
+                    <option value="{{ requester }}" {% if requester == selectedRequester %}selected{% endif %}>
+                        {{ requester }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="machine" class="form-label">Machine</label>
+            <select id="machine" name="machine" class="form-select">
+                <option value="">Toutes</option>
+                {% for machine in machines %}
+                    <option value="{{ machine }}" {% if machine == selectedMachine %}selected{% endif %}>
+                        {{ machine }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="date" class="form-label">Date</label>
+            <select id="date" name="date" class="form-select">
+                <option value="">Toutes</option>
+                {% for date in dates %}
+                    <option value="{{ date }}" {% if date == selectedDate %}selected{% endif %}>
+                        {{ date }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary me-2">Filtrer</button>
+            <a href="{{ path('list_pdfs') }}" class="btn btn-secondary">Réinitialiser</a>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-primary mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <strong>📂 Ordres en cours</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for file in activePdfs %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ path('view_pdf', {'filename': file}) }}" target="_blank">
+                                    {{ file }}
+                                </a>
+                            </div>
+                            {% set id = file|split('-')|first %}
+                            <div class="btn-group">
+                                <a href="{{ path('work_order_edit', {'id': id}) }}" class="btn btn-sm btn-primary">
+                                    Fermer
+                                </a>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-muted">Aucun OT en cours</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+
+        <div class="col-md-6">
+            <div class="card border-primary mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <strong>📁 Ordres terminés</strong>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for file in closedPdfs %}
+                        <li class="list-group-item">
+                            <a href="{{ path('view_pdf', {'filename': file }) }}" target="_blank">
+                                {{ file }}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-muted">Aucun OT fermé</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

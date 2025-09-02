@@ -3,176 +3,54 @@
 {% block title %}Générateur d'ordre de travail{% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4 text-center">
-    <h1>Générer un ordre de travail</h1>
-    <h4>Odre de Maintenance</h4>
-</div>
-    <form method="post">
-    {{ form_start(WorkOrderForm) }}
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.technician_name) }}
-                {{ form_widget(WorkOrderForm.technician_name, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.technician_name) }}
-            </div>
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.machine_name) }}
-                {{ form_widget(WorkOrderForm.machine_name, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.machine_name) }}
-            </div>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.maintenance_type) }}
-                {{ form_widget(WorkOrderForm.maintenance_type, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.maintenance_type) }}
-            </div>
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.technical_position) }}
-                {{ form_widget(WorkOrderForm.technical_position, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.technical_position) }}
-            </div>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.intervention_date) }}
-                {{ form_widget(WorkOrderForm.intervention_date, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.intervention_date) }}
-            </div>
-        </div>
-        </div>
-        <div class="container-fluid mt-4 text-center">
-            <h4>Durée Panne/Intervention</h4>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.downtime_start_time) }}
-                {{ form_widget(WorkOrderForm.downtime_start_time, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.downtime_start_time) }}
-            </div>
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.intervention_start_time) }}
-                {{ form_widget(WorkOrderForm.intervention_start_time, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.intervention_start_time) }}
-            </div>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.downtime_end_time) }}
-                {{ form_widget(WorkOrderForm.downtime_end_time, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.downtime_end_time) }}
-            </div>
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.intervention_end_time) }}
-                {{ form_widget(WorkOrderForm.intervention_end_time, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.intervention_end_time) }}
-            </div>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.field_intervention) }}
-                {{ form_widget(WorkOrderForm.field_intervention, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.field_intervention) }}
-            </div>
-        </div>
-        <div class="container-fluid mt-4 text-center">
-            <h4>Demande Intervention</h4>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.intervention_requester) }}
-                {{ form_widget(WorkOrderForm.intervention_requester, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.intervention_requester) }}
-            </div>
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.intervention_request_date) }}
-                {{ form_widget(WorkOrderForm.intervention_request_date, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.intervention_request_date) }}
-            </div>
-        </div>
-        <div class="container-fluid mt-4 text-center">
-            <h4>Descriptif Intervention Technique</h4>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.technical_details) }}
-                {{ form_widget(WorkOrderForm.technical_details, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.technical_details) }}
-            </div>
-        </div>
-        <div class="container-fluid mt-4 text-center">
-            <h4>Gestion Magasin</h4>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.piece_issued) }}
-                {{ form_widget(WorkOrderForm.piece_issued) }}
-                {{ form_errors(WorkOrderForm.piece_issued) }}
-            </div>
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.piece_type) }}
-                {{ form_widget(WorkOrderForm.piece_type, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.piece_type) }}
-            </div>
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.piece_brand) }}
-                {{ form_widget(WorkOrderForm.piece_brand, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.piece_brand) }}
-            </div>
-            <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.sap_reference) }}
-                {{ form_widget(WorkOrderForm.sap_reference, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.sap_reference) }}
-            </div>
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.quantity) }}
-                {{ form_widget(WorkOrderForm.quantity, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.quantity) }}
-            </div>
-        </div>
-        </div>
-        <div class="container-fluid mt-4 text-center">
-            <h4>Détails Pièces à créer</h4>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.brand) }}
-                {{ form_widget(WorkOrderForm.brand) }}
-                 {{ form_errors(WorkOrderForm.brand) }}
-            </div>
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.type) }}
-                {{ form_widget(WorkOrderForm.type, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.type) }}
-            </div>
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.manufacturer_reference) }}
-                {{ form_widget(WorkOrderForm.manufacturer_reference, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.manufacturer_reference) }}
-            </div>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.size) }}
-                {{ form_widget(WorkOrderForm.size) }}
-                 {{ form_errors(WorkOrderForm.size) }}
-            </div>
-            <div class="col-3">
-                {{ form_label(WorkOrderForm.created_piece_quantity) }}
-                {{ form_widget(WorkOrderForm.created_piece_quantity, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderForm.created_piece_quantity) }}
-            </div>
-        </div>
-        <div class="row justify-content-around mt-4">
-            <div class="col-4">
-                {{ form_label(WorkOrderForm.additional_details) }}
-                {{ form_widget(WorkOrderForm.additional_details, {'attr': {'class': 'form-control '}}) }}
-                {{ form_errors(WorkOrderForm.additional_details) }}
+{{ form_start(WorkOrderRequestForm) }}
+    <div class="container mt-4">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h1>Créer un ordre de travail</h1>
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Générer</button>
-        {{ form_end(WorkOrderForm) }}
-    </form>
+        <div class="text-center mt-4">
+            <h4>Demande Intervention</h4>
+        </div>
+
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-3">
+                {{ form_label(WorkOrderRequestForm.intervention_requester) }}
+                {{ form_widget(WorkOrderRequestForm.intervention_requester, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(WorkOrderRequestForm.intervention_requester) }}
+            </div>
+            <div class="col-md-3">
+                {{ form_label(WorkOrderRequestForm.intervention_request_date) }}
+                {{ form_widget(WorkOrderRequestForm.intervention_request_date, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(WorkOrderRequestForm.intervention_request_date) }}
+            </div>
+            <div class="col-md-3">
+                {{ form_label(WorkOrderRequestForm.machine_name) }}
+                {{ form_widget(WorkOrderRequestForm.machine_name, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(WorkOrderRequestForm.machine_name) }}
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <h4>Descriptif Intervention Technique</h4>
+        </div>
+
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-8">
+                {{ form_label(WorkOrderRequestForm.technical_details) }}
+                {{ form_widget(WorkOrderRequestForm.technical_details, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(WorkOrderRequestForm.technical_details) }}
+            </div>
+        </div>
+
+
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary">Créer</button>
+        </div>
+    </div>
+{{ form_end(WorkOrderRequestForm) }}
+
 {% endblock %}

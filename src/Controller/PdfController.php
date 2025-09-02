@@ -1,58 +1,101 @@
 <?php
-// src/Controller/PdfController.php
 
 namespace App\Controller;
 
+use App\Entity\WorkOrder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Finder\Finder;
+use Doctrine\ORM\EntityManagerInterface;
 
 class PdfController extends AbstractController
 {
     #[Route('/pdfs', name: 'list_pdfs')]
-    public function listPdfs(): Response
+    public function listPdfs(Request $request, EntityManagerInterface $entityManager): Response
     {
-        // Définir le répertoire où les PDF sont stockés
-        $pdfDirectory = '/var/www/WorkOrder/pdfot'; // Remplace par le chemin du répertoire où tu stockes les PDF
+        $pdfDirectory = '/var/www/WorkOrder/pdfot';
 
-        // Utiliser Symfony Finder pour lister les fichiers PDF dans ce répertoire
-        $finder = new Finder();
-        $finder->files()->in($pdfDirectory)->name('*.pdf'); // Filtrer uniquement les fichiers PDF
+        // Récupération des filtres via la query string
+        $selectedRequester = $request->query->get('requester');
+        $selectedMachine = $request->query->get('machine');
+        $selectedDate = $request->query->get('date');
 
-        // Créer un tableau pour stocker les fichiers PDF
-        $pdfFiles = [];
-        foreach ($finder as $file) {
-            $pdfFiles[] = $file->getFilename(); // Ajouter le nom de chaque fichier PDF à la liste
-        }
+        // Récupération de tous les WorkOrders
+        $repo = $entityManager->getRepository(WorkOrder::class);
+        $allOrders = $repo->findAll();
 
-        // Passer la liste des fichiers PDF à la vue
+        // Construction des listes uniques pour les filtres
+        $requesters = array_unique(array_filter(array_map(fn($o) => $o->getInterventionRequester(), $allOrders)));
+        $machines = array_unique(array_filter(array_map(fn($o) => $o->getMachineName(), $allOrders)));
+        $dates = array_unique(array_filter(array_map(function ($o) {
+            return $o->getInterventionRequestDate()?->format('d-m-Y');
+        }, $allOrders)));
+
+        sort($requesters);
+        sort($machines);
+        sort($dates);
+
+        // Application des filtres
+        $filteredOrders = array_filter($allOrders, function (WorkOrder $order) use ($selectedRequester, $selectedMachine, $selectedDate) {
+            $match = true;
+
+            if ($selectedRequester && $order->getInterventionRequester() !== $selectedRequester) {
+                $match = false;
+            }
+
+            if ($selectedMachine && $order->getMachineName() !== $selectedMachine) {
+                $match = false;
+            }
+
+            if ($selectedDate && $order->getInterventionRequestDate()?->format('d-m-Y') !== $selectedDate) {
+                $match = false;
+            }
+
+            return $match;
+        });
+
+        // Génération des noms de fichiers attendus
+        $getFileName = function (WorkOrder $order) use ($pdfDirectory) {
+            $id = $order->getId();
+            $machine = $order->getMachineName();
+            $date = $order->getInterventionRequestDate()?->format('d-m-Y');
+            $filename = "{$id}-{$machine}-{$date}-ot.pdf";
+
+            return file_exists("$pdfDirectory/$filename") ? $filename : null;
+        };
+
+        // Tri en deux groupes : en cours / fermés
+        $activePdfs = array_filter(array_map($getFileName, array_filter($filteredOrders, fn($o) => $o->isStatus())));
+        $closedPdfs = array_filter(array_map($getFileName, array_filter($filteredOrders, fn($o) => !$o->isStatus())));
+
         return $this->render('pdf.html.twig', [
-            'pdfFiles' => $pdfFiles,
-            'pdfDirectory' => $pdfDirectory
+            'activePdfs' => $activePdfs,
+            'closedPdfs' => $closedPdfs,
+            'pdfDirectory' => $pdfDirectory,
+            'requesters' => $requesters,
+            'machines' => $machines,
+            'dates' => $dates,
+            'selectedRequester' => $selectedRequester,
+            'selectedMachine' => $selectedMachine,
+            'selectedDate' => $selectedDate,
         ]);
     }
 
     #[Route('/view-pdf/{filename}', name: 'view_pdf')]
     public function viewPdf(string $filename): Response
     {
-    // Le répertoire où les fichiers sont stockés
-    $pdfDirectory = '/var/www/WorkOrder/pdfot'; // Remplace par ton répertoire
+        $pdfDirectory = '/var/www/WorkOrder/pdfot';
+        $pdfPath = "$pdfDirectory/$filename";
 
-    // Vérifier si le fichier PDF existe
-    $pdfPath = $pdfDirectory . '/' . $filename;
-    if (!file_exists($pdfPath)) {
-        throw $this->createNotFoundException('Le fichier PDF n\'existe pas.');
+        if (!file_exists($pdfPath)) {
+            throw $this->createNotFoundException("Le fichier PDF n'existe pas.");
+        }
+
+        return new Response(file_get_contents($pdfPath), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
     }
-
-    // Lire le fichier PDF
-    $pdfContent = file_get_contents($pdfPath);
-
-    // Retourner la réponse avec les bons en-têtes pour afficher le PDF
-    return new Response($pdfContent, 200, [
-        'Content-Type'        => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="' . $filename . '"'
-    ]);
-}
 
 }
