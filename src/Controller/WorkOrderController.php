@@ -20,7 +20,13 @@ class WorkOrderController extends AbstractController
 
         $workOrder = new WorkOrder();
 
-        $WorkOrderRequestForm = $this->createForm(WorkOrderRequestType::class, $workOrder);
+        $requesters = file_exists($this->getParameter('kernel.project_dir').'/config/workers.php')
+            ? require $this->getParameter('kernel.project_dir').'/config/workers.php'
+            : ['default_user'];
+
+        $WorkOrderRequestForm = $this->createForm(WorkOrderRequestType::class, $workOrder, [
+            'requesters' => $requesters['intervention_requesters'] ?? [],
+            ]);
         $WorkOrderRequestForm->handleRequest($request);
 
         if ($WorkOrderRequestForm->isSubmitted() && $WorkOrderRequestForm->isValid()) {

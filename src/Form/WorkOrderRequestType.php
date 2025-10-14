@@ -21,13 +21,11 @@ class WorkOrderRequestType extends AbstractType
     {
         $builder
 
-            ->add('intervention_requester', ChoiceType::class,[
-                'choices' => [
-                    'Samuel Neau-Cadot' => 'Samuel Neau-Cadot',
-                    'Baptiste Hervieux' => 'Baptiste Hervieux',
-                    'Parmentier Philippe' => 'Parmentier Philippe',
-
-                ],
+            ->add('intervention_requester', ChoiceType::class, [
+                'choices' => array_combine(
+                    $options['requesters'],
+                    $options['requesters']
+                ),
                 'placeholder' => 'Sélectionnez un demandeur',
                 'label' => "Demande",
                 'required' => true,
@@ -63,6 +61,7 @@ class WorkOrderRequestType extends AbstractType
             'csrf_protection' => false,  // Ensure CSRF protection is enabled
             'csrf_field_name' => '_token',  // Default field name for CSRF
             'csrf_token_id'   => 'work_order',  // Unique ID for this form
+            'requesters' => [],
         ]);
     }
 }

@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+{% block title %}Tableau de bord KPI{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-5">Indicateurs de Performance (KPI)</h1>
+
+    <div class="row g-4">
+        {# KPI : Total OT créés #}
+        <div class="col-md-4">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">Total OT créés</h5>
+                    <p class="display-4 fw-bold">{{ totalOrders }}</p>
+                </div>
+            </div>
+        </div>
+
+        {# KPI : Total OT ouverts #}
+        <div class="col-md-4">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-success">Total OT ouverts</h5>
+                    <p class="display-4 fw-bold">{{ openOrders }}</p>
+                </div>
+            </div>
+        </div>
+
+        {# KPI : Total OT fermés #}
+        <div class="col-md-4">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-danger">Total OT fermés</h5>
+                    <p class="display-4 fw-bold">{{ closedOrders }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-4">
+        {# KPI : Temps moyen intervention #}
+        <div class="col-md-6">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-warning">Temps moyen d'intervention</h5>
+                    <p class="display-4 fw-bold">{{ avgIntervention }}</p>
+                    <p class="text-muted">hh:mm</p>
+                </div>
+            </div>
+        </div>
+
+        {# KPI : Temps moyen de panne #}
+        <div class="col-md-6">
+            <div class="card shadow-sm border-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-info">Temps moyen de panne</h5>
+                    <p class="display-4 fw-bold">{{ avgDowntime }}</p>
+                    <p class="text-muted">hh:mm</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Statistiques mensuelles #}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Répartition mensuelle (12 derniers mois)</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Mois</th>
+                            <th class="text-center">OT ouverts</th>
+                            <th class="text-center">OT fermés</th>
+                            <th class="text-center">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in monthlyStats %}
+                        <tr>
+                            <td>{{ stat.month_label }}</td>
+                            <td class="text-center text-success fw-bold">{{ stat.open_count }}</td>
+                            <td class="text-center text-danger fw-bold">{{ stat.closed_count }}</td>
+                            <td class="text-center">{{ stat.open_count + stat.closed_count }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Aucune donnée disponible</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ path('home.index') }}" class="btn btn-primary">Retour à l'accueil</a>
+    </div>
+</div>
+{% endblock %}
