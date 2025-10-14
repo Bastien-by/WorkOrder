@@ -8,6 +8,7 @@
 /var/
 /vendor/
 /pdfot/
+/form/
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###
