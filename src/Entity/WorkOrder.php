@@ -104,6 +104,12 @@ class WorkOrder
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $elecPlanPicture = null;
 
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private ?bool $Piece = null;
+
+    #[ORM\Column(type: 'boolean', nullable: true)]
+    private ?bool $PieceNeeded = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -461,6 +467,28 @@ class WorkOrder
     public function setElecPlanPicture(?string $elecPlanPicture): self
     {
         $this->elecPlanPicture = $elecPlanPicture;
+        return $this;
+    }
+
+    public function isPiece(): ?bool
+    {
+        return $this->Piece;
+    }
+
+    public function setPiece(?bool $Piece): self
+    {
+        $this->Piece = $Piece;
+        return $this;
+    }
+
+    public function isPieceNeeded(): ?bool
+    {
+        return $this->PieceNeeded;
+    }
+
+    public function setPieceNeeded(?bool $PieceNeeded): self
+    {
+        $this->ElecPlan = $PieceNeeded;
         return $this;
     }
 

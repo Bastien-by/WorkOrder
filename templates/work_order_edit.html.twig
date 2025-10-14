@@ -89,17 +89,17 @@
             {{ form_errors(WorkOrderClosureForm.downtimeStartTime) }}
         </div>
         <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.downtimeEndTime) }}
-            {{ form_widget(WorkOrderClosureForm.downtimeEndTime, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.downtimeEndTime) }}
+            {{ form_label(WorkOrderClosureForm.interventionStartTime) }}
+            {{ form_widget(WorkOrderClosureForm.interventionStartTime, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(WorkOrderClosureForm.interventionStartTime) }}
         </div>
     </div>
 
     <div class="row justify-content-center mt-4">
         <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.interventionStartTime) }}
-            {{ form_widget(WorkOrderClosureForm.interventionStartTime, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.interventionStartTime) }}
+            {{ form_label(WorkOrderClosureForm.downtimeEndTime) }}
+            {{ form_widget(WorkOrderClosureForm.downtimeEndTime, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(WorkOrderClosureForm.downtimeEndTime) }}
         </div>
         <div class="col-md-3">
             {{ form_label(WorkOrderClosureForm.interventionEndTime) }}
@@ -150,83 +150,113 @@
         <h4>📥 Plan électrique</h4>
     </div>
 
+    {# Radios ElecPlan toujours visibles #}
     <div class="row justify-content-center mt-3">
-        <div class="col-md-6 text-center">
+        <div class="col-md-6 text-center" id="elec-plan-group">
             {{ form_label(WorkOrderClosureForm.ElecPlan) }}
-            {{ form_widget(WorkOrderClosureForm.ElecPlan, {
-                'attr': {
-                    'onchange': 'toggleChangedElecPlan(this)'
-                }
-            }) }}
+            {{ form_widget(WorkOrderClosureForm.ElecPlan) }}
             {{ form_errors(WorkOrderClosureForm.ElecPlan) }}
         </div>
     </div>
 
-    <div class="row justify-content-center mt-3" id="changed-elec-container" style="display: none;">
+    {# Conteneur des champs dépendants — masqué par défaut #}
+    {% set hasElecPlan = WorkOrderClosureForm.ElecPlan.vars.data ?? false %}
+    <div class="container mt-3" id="elec-dependent" style="display: {{ hasElecPlan ? 'block' : 'none' }};">
+        <div class="row justify-content-center">
+            <div class="col-md-12 text-center">
+                {{ form_label(WorkOrderClosureForm.changedElecPlan) }}
+                {{ form_widget(WorkOrderClosureForm.changedElecPlan) }}
+                {{ form_errors(WorkOrderClosureForm.changedElecPlan) }}
+            </div>
+        </div>
+
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-6">
+                {{ form_label(WorkOrderClosureForm.elecPlanPicture) }}
+                {{ form_widget(WorkOrderClosureForm.elecPlanPicture, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(WorkOrderClosureForm.elecPlanPicture) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+      <h4>⚙️ Pièce</h4>
+    </div>
+
+    {# Radios "Pièce disponible ?" toujours visibles #}
+    <div class="row justify-content-center mt-3">
+      <div class="col-md-6 text-center" id="piece-group">
+        {{ form_label(WorkOrderClosureForm.Piece) }}
+        {{ form_widget(WorkOrderClosureForm.Piece) }}
+        {{ form_errors(WorkOrderClosureForm.Piece) }}
+      </div>
+    </div>
+
+    {# Dépendant: afficher UNIQUEMENT quand Piece == false (Non) #}
+    {% set hasNoPiece = (WorkOrderClosureForm.Piece.vars.data ?? null) is same as(false) %}
+    <div class="container mt-3" id="piece-dependent" style="display: {{ hasNoPiece ? 'block' : 'none' }};">
+      <div class="row justify-content-center">
         <div class="col-md-12 text-center">
-            {{ form_label(WorkOrderClosureForm.changedElecPlan) }}
-            {{ form_widget(WorkOrderClosureForm.changedElecPlan, {
-                'attr': {
-                    'onchange': 'toggleElecUpload(this)'
-                }
-            }) }}
-            {{ form_errors(WorkOrderClosureForm.changedElecPlan) }}
+          {{ form_label(WorkOrderClosureForm.PieceNeeded) }}
+          {{ form_widget(WorkOrderClosureForm.PieceNeeded) }}
+          {{ form_errors(WorkOrderClosureForm.PieceNeeded) }}
         </div>
+      </div>
     </div>
 
-    {# Champ upload #}
-    <div class="row justify-content-center mt-3" id="elec-upload" style="display: none;">
-        <div class="col-md-6">
-            {{ form_label(WorkOrderClosureForm.elecPlanPicture) }}
-            {{ form_widget(WorkOrderClosureForm.elecPlanPicture, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.elecPlanPicture) }}
-        </div>
-    </div>
 
+
+    {# Bouton de soumission — HORS du conteneur conditionnel #}
     <div class="text-center mt-4">
         <button type="submit" class="btn btn-success">✅ Clôturer l'ordre</button>
     </div>
 
     <script>
-        // Afficher ou cacher le bloc "Plan modifié ?" selon ElecPlan
-        function toggleChangedElecPlan(radioGroup) {
-            const container = document.getElementById('changed-elec-container');
-            const radios = radioGroup.querySelectorAll('input[type="radio"]');
-            const isYes = Array.from(radios).some(r => r.checked && r.value === "1");
-            container.style.display = isYes ? 'block' : 'none';
+    document.addEventListener('DOMContentLoaded', function () {
+      // Helper générique: teste si un groupe radios est coché sur "Oui"
+      function isYesChecked(container) {
+        const radios = container ? container.querySelectorAll('input[type="radio"]') : [];
+        return Array.from(radios).some(r =>
+          r.checked && (r.value === '1' || r.value === 'true' || r.value === 'on')
+        );
+      }
 
-            // Si non, cacher le champ upload aussi
-            if (!isYes) {
-                document.getElementById('elec-upload').style.display = 'none';
-            }
-        }
+      // Helper: au moins une option sélectionnée ?
+      function hasAnySelection(container) {
+        const radios = container ? container.querySelectorAll('input[type="radio"]') : [];
+        return Array.from(radios).some(r => r.checked);
+      }
 
-        // Afficher ou cacher le champ upload selon changedElecPlan
-        function toggleElecUpload(radioGroup) {
-            const radios = radioGroup.querySelectorAll('input[type="radio"]');
-            const isYes = Array.from(radios).some(r => r.checked && r.value === "1");
-            document.getElementById('elec-upload').style.display = isYes ? 'flex' : 'none';
-        }
+      // 1) ElecPlan: afficher #elec-dependent quand ElecPlan == Oui
+      const elecGroup = document.getElementById('elec-plan-group');
+      const elecDependent = document.getElementById('elec-dependent');
 
-        // Initialiser au chargement si valeurs pré-remplies
-        document.addEventListener('DOMContentLoaded', function () {
-            // ElecPlan
-            const elecPlanRadios = document.querySelectorAll('[name$="[ElecPlan]"]');
-            if(elecPlanRadios.length) {
-                toggleChangedElecPlan(elecPlanRadios[0].closest('div'));
-                elecPlanRadios.forEach(r => r.addEventListener('change', () => toggleChangedElecPlan(r.closest('div'))));
-            }
+      function updateElec() {
+        if (!elecGroup || !elecDependent) return;
+        elecDependent.style.display = isYesChecked(elecGroup) ? 'block' : 'none';
+      }
 
-            // changedElecPlan
-            const changedRadios = document.querySelectorAll('[name$="[changedElecPlan]"]');
-            if(changedRadios.length) {
-                toggleElecUpload(changedRadios[0].closest('div'));
-                changedRadios.forEach(r => r.addEventListener('change', () => toggleElecUpload(r.closest('div'))));
-            }
-        });
+      elecGroup && elecGroup.addEventListener('change', updateElec);
+
+      // 2) Pièce: afficher #piece-dependent uniquement quand Piece == Non
+      const pieceGroup = document.getElementById('piece-group');
+      const pieceDependent = document.getElementById('piece-dependent');
+
+      function updatePiece() {
+        if (!pieceGroup || !pieceDependent) return;
+        const any = hasAnySelection(pieceGroup);
+        const yes = isYesChecked(pieceGroup);
+        // Afficher seulement si une sélection est faite ET que c'est Non
+        pieceDependent.style.display = (any && !yes) ? 'block' : 'none';
+      }
+
+      pieceGroup && pieceGroup.addEventListener('change', updatePiece);
+
+      // Initialiser l'état à l'ouverture
+      updateElec();
+      updatePiece();
+    });
     </script>
-
-
 
     {{ form_end(WorkOrderClosureForm) }}
 {% endif %}

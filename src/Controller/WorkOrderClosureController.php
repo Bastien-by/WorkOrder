@@ -111,6 +111,17 @@ class WorkOrderClosureController extends AbstractController
         ]);
     }
 
+    private function minutesToHhMm(?int $minutes): string
+    {
+        if ($minutes === null) {
+            return 'N/A';
+        }
+        $h = intdiv($minutes, 60);
+        $m = $minutes % 60;
+        return sprintf('%02d:%02d', $h, $m);
+    }
+
+
 
 
     private function drawSection(TCPDF $pdf, string $title, callable $contentCallback): void
@@ -167,9 +178,16 @@ class WorkOrderClosureController extends AbstractController
         // SECTION 2 : Informations sur la panne
         $this->drawSection($pdf, "Informations sur la panne", function() use ($pdf, $workOrder) {
             $pdf->Cell(95, 10, "Début panne: " . ($workOrder->getDowntimeStartTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 0, 'C');
-            $pdf->Cell(95, 10, "Fin panne: " . ($workOrder->getDowntimeEndTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 1, 'C');
-            $pdf->Cell(95, 10, "Début intervention: " . ($workOrder->getInterventionStartTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 0, 'C');
+            $pdf->Cell(95, 10, "Début intervention: " . ($workOrder->getInterventionStartTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 1, 'C');
+            $pdf->Cell(95, 10, "Fin panne: " . ($workOrder->getDowntimeEndTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 0, 'C');
             $pdf->Cell(95, 10, "Fin intervention: " . ($workOrder->getInterventionEndTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 1, 'C');
+            $intMinutes = $workOrder->getInterventionTime(); // entier en minutes
+            $dowMinutes = $workOrder->getDowntimeTime();     // entier en minutes
+
+            $pdf->Cell(95, 10, "Durée panne (h) : " . $this->minutesToHhMm($dowMinutes), 0, 0, 'C');
+            $pdf->Cell(95, 10, "Durée intervention (h) : " . $this->minutesToHhMm($intMinutes), 0, 1, 'C');
+
+
         });
 
 
@@ -205,9 +223,13 @@ class WorkOrderClosureController extends AbstractController
                     $pdf->Cell(0, 10, "⚠️ Image non trouvée", 0, 1, 'C');
                 }
             }
-
         });
 
+        $pdf->Ln(30);
+        $this->drawSection($pdf, "Pièce", function() use ($pdf, $workOrder) {
+            $pdf->Cell(0, 10, "Est-ce qu'il y a une pièce ? : " . ($workOrder->isPiece() ? 'Oui' : 'Non'), 0, 1, 'C');
+            $pdf->Cell(0, 10, "Est-ce qu'il y a besoin d'une pièce ? : " . ($workOrder->isPieceNeeded() ? 'Oui' : 'Non'), 0, 1, 'C');
+        });
 
         $pdf->Output($filePath, 'F');
 

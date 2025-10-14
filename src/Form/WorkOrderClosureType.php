@@ -46,10 +46,24 @@ class WorkOrderClosureType extends AbstractType
                 'input' => 'datetime',
                 'attr' => ['style' => 'width: 180px; display: inline-block;'],
             ])
-            ->add('fieldIntervention', TextType::class, [
+            ->add('fieldIntervention', ChoiceType::class, [
+                'choices' => [
+                    'Automatisme' => 'Automatisme',
+                    'Électricité' => 'Électricité',
+                    'Mécanique' => 'Mécanique',
+                    'Pneumatique' => 'Pneumatique',
+                    'Hydraulique' => 'Hydraulique',
+                    'Eau' => 'Eau',
+                    'Détections Incendie' => 'Détections Incendie',
+                    'Informatique' => 'Informatique',
+                    'Extinction Gaz' => 'Extinction Gaz',
+                    'Gamme de Maintenance' => 'Gamme de Maintenance',
+                    'HSE' => 'HSE',
+                ],
+                'placeholder' => 'Sélectionnez un Domaine',
                 'label' => 'Domaine d\'intervention',
                 'required' => true,
-                'attr' => ['style' => 'width: 200px; display: inline-block;'],
+                'attr' => ['style' => 'width: 210px; display: inline-block;'],
             ])
             ->add('technicalPosition', TextType::class, [
                 'label' => 'Poste technique',
@@ -89,12 +103,33 @@ class WorkOrderClosureType extends AbstractType
                 ],
                 'expanded' => true,  // boutons radio
                 'multiple' => false, // une seule sélection
-                'required' => false,
+                'required' => false,     // force Oui/Non
+                'placeholder' => false,
             ])
             ->add('elecPlanPicture', FileType::class, [
                 'label' => 'Plan électrique (image)',
                 'mapped' => false,
                 'required' => false,
+            ])
+            ->add('Piece', ChoiceType::class, [
+            'label' => "Est-ce qu'il y a une pièce ?",
+            'choices' => [
+                'Oui' => true,
+                'Non' => false,
+            ],
+            'expanded' => true,  // boutons radio
+            'multiple' => false, // une seule sélection
+            'required' => true,
+            ])
+            ->add('PieceNeeded', ChoiceType::class, [
+            'label' => "Est-ce qu'une pièce est nécessaire ?",
+            'choices' => [
+                'Oui' => true,
+                'Non' => false,
+            ],
+            'expanded' => true,  // boutons radio
+            'multiple' => false, // une seule sélection
+            'required' => false,
             ]);
 
     }
