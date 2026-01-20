@@ -21,12 +21,19 @@ class WorkOrderClosureController extends AbstractController
         // Récupération des OT actifs
         $orders = $entityManager->getRepository(WorkOrder::class)->findBy(['status' => true]);
 
-        // Génération des noms de fichiers PDF attendus (même logique que dans PdfController)
+        // Génération des noms de fichiers PDF attendus
         $getFileName = function (WorkOrder $order) use ($pdfDirectory) {
             $id = $order->getId();
+            $sector = $order->getSector();
             $machine = $order->getMachineName();
             $date = $order->getInterventionRequestDate()?->format('d-m-Y');
-            $filename = "{$id}-{$machine}-{$date}-ot.pdf";
+
+            // Nettoie les valeurs
+            $sectorClean = str_replace(' ', '_', $sector ?? 'NO_SECTOR');
+            $machineClean = str_replace(' ', '_', $machine ?? 'NO_MACHINE');
+
+            // Format unifié avec secteur
+            $filename = "{$id}-{$sectorClean}-{$machineClean}-{$date}-ot.pdf";
 
             return file_exists("$pdfDirectory/$filename") ? $filename : null;
         };
@@ -37,6 +44,7 @@ class WorkOrderClosureController extends AbstractController
         return $this->render('work_order_edit.html.twig', [
             'activePdfs' => $activePdfs,
             'WorkOrderClosureForm' => null,
+            'workOrder' => null,
         ]);
     }
 
@@ -53,25 +61,21 @@ class WorkOrderClosureController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // 🔽 Gestion de l'upload d'image du plan électrique
-            $uploadedFile = $form->get('elecPlanPicture')->getData();
 
-            // Vérifie si les dates sont bien récupérées depuis le formulaire
-            dump($workOrder->getDowntimeStartTime());
-            dump($workOrder->getDowntimeEndTime());
+            // === UPLOAD PHOTO DESCRIPTIVE ===
+            $photoFile = $form->get('descriptionPhoto')->getData();
+            if ($photoFile) {
+                $newFilename = uniqid().'.'.$photoFile->guessExtension();
+                $photoFile->move(
+                    $this->getParameter('kernel.project_dir').'/public/uploads/photos/',
+                    $newFilename
+                );
 
-
-
-            if ($uploadedFile) {
-                $filename = uniqid().'.'.$uploadedFile->guessExtension();
-                $destination = $this->getParameter('kernel.project_dir').'/public/uploads/elec_plans';
-                $uploadedFile->move($destination, $filename);
-
-                // 🔹 Stocke le chemin dans la bonne propriété (elecPlanPicture)
-                $workOrder->setElecPlanPicture('/uploads/elec_plans/'.$filename);
+                // Sauvegarde le chemin
+                $workOrder->setDescriptionPhoto('/uploads/photos/'.$newFilename);
             }
 
-            // 🔹 Marque comme clôturé
+            // Marque comme clôturé
             $workOrder->setStatus(false);
 
             // Downtime en minutes
@@ -94,20 +98,19 @@ class WorkOrderClosureController extends AbstractController
                 $workOrder->setInterventionTime($minutes);
             }
 
-
             $entityManager->flush();
 
-            // 🔹 Génère ton PDF mais sans l'image (puisque tu ne veux pas l'afficher)
+            // Génère le PDF de clôture
             $this->generateClosurePDF($workOrder);
 
             $this->addFlash('success', "L'ordre de travail #{$id} a été modifié et clôturé.");
-            return $this->redirectToRoute('list_pdfs');
+            return $this->redirectToRoute('work_order_edit_list');
         }
 
         return $this->render('work_order_edit.html.twig', [
             'WorkOrderClosureForm' => $form->createView(),
             'workOrder' => $workOrder,
-            'orders' => null,
+            'activePdfs' => null, // Pas de liste quand on édite un OT spécifique
         ]);
     }
 
@@ -154,86 +157,350 @@ class WorkOrderClosureController extends AbstractController
     private function generateClosurePDF(WorkOrder $workOrder): void
     {
         $machineName = $workOrder->getMachineName();
+        $sector = $workOrder->getSector();
+        $interventionDescription = $workOrder->getInterventionDescription();
         $interventionRequestDate = $workOrder->getInterventionRequestDate()?->format('d/m/Y');
         $interventionRequestDateFile = $workOrder->getInterventionRequestDate()?->format('d-m-Y');
         $id_ot = $workOrder->getId();
 
-        $filePath = "/var/www/WorkOrder/pdfot/$id_ot-$machineName-$interventionRequestDateFile-ot.pdf";
+        // Nettoie les valeurs pour le filename
+        $sectorClean = str_replace(' ', '_', $sector ?? 'NO_SECTOR');
+        $machineNameClean = str_replace(' ', '_', $machineName ?? 'NO_MACHINE');
 
-        $pdf = new TCPDF();
+        $filePath = "/var/www/WorkOrder/pdfot/{$id_ot}-{$sectorClean}-{$machineNameClean}-{$interventionRequestDateFile}-ot.pdf";
+
+        $pdf = new TCPDF('P', 'mm', 'A4');
         $pdf->AddPage();
-        $pdf->SetTextColor(14, 52, 113);
-        $pdf->Image($_SERVER['DOCUMENT_ROOT'] . '/images/OPMobility.jpg', 0, 14.55, 37.5, 15, 'JPG');
-        $pdf->Ln(9);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(true, 10);
 
-        // SECTION 1 : Demande Intervention
-        $this->drawSection($pdf, "Demande Intervention", function() use ($pdf, $workOrder, $interventionRequestDate) {
-            $pdf->Cell(95, 10, "Demande: ". $workOrder->getInterventionRequester(), 0, 0, 'C');
-            $pdf->Cell(95, 10, "Date: " . $interventionRequestDate, 0, 1, 'C');
-            $pdf->Cell(0, 10, "Machine: ". $workOrder->getMachineName(), 0, 0, 'C');
-            $pdf->Ln(15);
-            $pdf->MultiCell(0, 10, $workOrder->getTechnicalDetails(), 0, 'C');
-        });
+        // === EN-TÊTE ===
+        $pdf->Image($_SERVER['DOCUMENT_ROOT'] . '/images/OPMobility.jpg', 10, 10, 40, 15, 'JPG');
 
-        // SECTION 2 : Informations sur la panne
-        $this->drawSection($pdf, "Informations sur la panne", function() use ($pdf, $workOrder) {
-            $pdf->Cell(95, 10, "Début panne: " . ($workOrder->getDowntimeStartTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 0, 'C');
-            $pdf->Cell(95, 10, "Début intervention: " . ($workOrder->getInterventionStartTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 1, 'C');
-            $pdf->Cell(95, 10, "Fin panne: " . ($workOrder->getDowntimeEndTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 0, 'C');
-            $pdf->Cell(95, 10, "Fin intervention: " . ($workOrder->getInterventionEndTime()?->format('d/m/Y H:i') ?? 'N/A'), 0, 1, 'C');
-            $intMinutes = $workOrder->getInterventionTime(); // entier en minutes
-            $dowMinutes = $workOrder->getDowntimeTime();     // entier en minutes
+        // Titre principal
+        $pdf->SetX(50);
+        $pdf->SetFont('helvetica', 'B', 16);
+        $pdf->SetTextColor(0, 0, 128); // Bleu foncé
+        $pdf->Cell(0, 15, 'ORDRE DE MAINTENANCE TRACKING', 0, 1, 'C');
 
-            $pdf->Cell(95, 10, "Durée panne (h) : " . $this->minutesToHhMm($dowMinutes), 0, 0, 'C');
-            $pdf->Cell(95, 10, "Durée intervention (h) : " . $this->minutesToHhMm($intMinutes), 0, 1, 'C');
+        $pdf->SetFont('helvetica', 'B', 12);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Cell(0, 8, strtoupper($this->getMonthName($workOrder->getInterventionRequestDate())), 0, 1, 'C');
+
+        $pdf->Ln(5);
+
+        // === TABLEAU 2 COLONNES (GAUCHE/DROITE) ===
+        $this->drawTwoColumnLayout($pdf, $workOrder, $interventionRequestDate);
+
+        // === DURÉE PANNE/INTERVENTION ===
+        $this->drawDowntimeSection($pdf, $workOrder);
+
+        // === DESCRIPTION TECHNIQUE ===
+        $this->drawTechnicalDescriptionSection($pdf, $workOrder);
+
+        // === GESTION MAGASIN PIÈCES ===
+        $this->drawSparePartSection($pdf, $workOrder);
+
+        $pdf->Output($filePath, 'F');
+    }
+
+    private function drawTwoColumnLayout(TCPDF $pdf, WorkOrder $workOrder, string $interventionRequestDate): void
+    {
+        $leftColX = 10;
+        $rightColX = 115;
+        $leftColWidth = 95;
+        $rightColWidth = 90;
+        $rowHeight = 10;
+
+        $pdf->SetFont('helvetica', '', 9);  // Réduit de 10 à 9
+        $pdf->SetTextColor(0, 0, 0);
+
+        $startY = $pdf->GetY();
+
+        // === COLONNE GAUCHE ===
+        $pdf->SetY($startY);
+        $this->drawTableRow($pdf, $leftColX, $leftColWidth, $rowHeight, 'N° ORDRE TRAVAIL', (string)$workOrder->getId());
+
+        $pdf->SetY($startY + $rowHeight);
+        $this->drawTableRow($pdf, $leftColX, $leftColWidth, $rowHeight, 'STATUT OT', $workOrder->getStatus() ? 'OUVERT' : 'CLOTURE');
+
+        $pdf->SetY($startY + ($rowHeight * 2));
+        $this->drawTableRow($pdf, $leftColX, $leftColWidth, $rowHeight, 'NOM(S) INTERVENANTS', $workOrder->getTechnicianName() ?? 'N/A');
+
+        $pdf->SetY($startY + ($rowHeight * 3));
+        $this->drawTableRow($pdf, $leftColX, $leftColWidth, $rowHeight, 'DATE INTERVENTION', $interventionRequestDate);
+
+        $pdf->SetY($startY + ($rowHeight * 4));
+        $this->drawTableRow($pdf, $leftColX, $leftColWidth, $rowHeight, 'DEMANDEUR INTERVENTION', $workOrder->getInterventionRequester() ?? 'N/A');
+
+        $pdf->SetY($startY + ($rowHeight * 5));
+        $this->drawTableRow($pdf, $leftColX, $leftColWidth, $rowHeight, 'TYPE MAINTENANCE', $workOrder->getMaintenanceType() ?? 'N/A');
+
+        $pdf->SetY($startY + ($rowHeight * 6));
+        $closureDate = $workOrder->getDowntimeEndTime()?->format('d/m/Y') ?? 'N/A';
+        $this->drawTableRow($pdf, $leftColX, $leftColWidth, $rowHeight, 'DATE CLOTURE', $closureDate);
+
+        // === COLONNE DROITE ===
+        $pdf->SetY($startY);
+        $this->drawTableRowHighlight($pdf, $rightColX, $rightColWidth, $rowHeight, 'SECTEUR', $workOrder->getSector() ?? 'N/A');
+
+        $pdf->SetY($startY + $rowHeight);
+        $this->drawTableRowHighlight($pdf, $rightColX, $rightColWidth, $rowHeight, 'NOM MACHINE', $workOrder->getMachineName() ?? 'N/A');
+
+        $pdf->SetY($startY + ($rowHeight * 2));
+        $this->drawTableRowHighlight($pdf, $rightColX, $rightColWidth, $rowHeight, 'DOMAINE INTERVENTION', $workOrder->getFieldIntervention() ?? 'N/A');
+
+        // Repositionne après les 2 colonnes
+        $pdf->SetY($startY + ($rowHeight * 7));
+        $pdf->Ln(5);
+    }
+
+    private function drawTableRow(TCPDF $pdf, float $x, float $width, float $height, string $label, string $value): void
+    {
+        $pdf->SetX($x);
+        $pdf->SetFont('helvetica', 'B', 8);  // Label en gras, taille 8
+        $pdf->SetFillColor(220, 220, 220);
+        $pdf->Cell($width * 0.45, $height, $label, 1, 0, 'L', true);
+
+        $pdf->SetFont('helvetica', '', 9);  // Valeur normale, taille 9
+        $pdf->Cell($width * 0.55, $height, $value, 1, 0, 'L');
+    }
+
+    private function drawTableRowHighlight(TCPDF $pdf, float $x, float $width, float $height, string $label, string $value): void
+    {
+        $pdf->SetX($x);
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->SetFillColor(200, 230, 255); // Bleu clair
+        $pdf->Cell($width * 0.45, $height, $label, 1, 0, 'L', true);
+
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetFillColor(240, 248, 255);
+        $pdf->Cell($width * 0.55, $height, $value, 1, 0, 'L', true);
+    }
+
+    private function drawDowntimeSection(TCPDF $pdf, WorkOrder $workOrder): void
+    {
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFillColor(0, 32, 96); // Bleu foncé
+        $pdf->Cell(0, 8, 'DUREE PANNE/INTERVENTION', 0, 1, 'C', true);
+
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->Ln(3);
+
+        // Largeur totale disponible (marges prises en compte)
+        $pageWidth = $pdf->getPageWidth();
+        $margins = $pdf->getMargins();
+        $availableWidth = $pageWidth - $margins['left'] - $margins['right'];
+
+        $colWidth = $availableWidth / 4;
+        $rowHeight = 10;
+
+        // En-tête
+        $pdf->SetFillColor(100, 100, 100);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFont('helvetica', 'B', 8);
+
+        $pdf->Cell($colWidth, $rowHeight, 'HEURE DEBUT PANNE', 1, 0, 'C', true);
+        $pdf->Cell($colWidth, $rowHeight, 'HEURE FIN PANNE', 1, 0, 'C', true);
+        $pdf->Cell($colWidth, $rowHeight, 'HEURE DEBUT INTERVENTION', 1, 0, 'C', true);
+        $pdf->Cell($colWidth, $rowHeight, 'HEURE FIN INTERVENTION', 1, 1, 'C', true);
+
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetFillColor(220, 220, 220);
+
+        // Données (heure seule ici, tu peux remettre ton format jour+date si tu veux)
+        $pdf->Cell($colWidth, $rowHeight, $workOrder->getDowntimeStartTime()?->format('d/m/Y H:i') ?? '', 1, 0, 'C');
+        $pdf->Cell($colWidth, $rowHeight, $workOrder->getDowntimeEndTime()?->format('d/m/Y H:i') ?? '', 1, 0, 'C');
+        $pdf->Cell($colWidth, $rowHeight, $workOrder->getInterventionStartTime()?->format('d/m/Y H:i') ?? '', 1, 0, 'C');
+        $pdf->Cell($colWidth, $rowHeight, $workOrder->getInterventionEndTime()?->format('d/m/Y H:i') ?? '', 1, 1, 'C');
+
+        $pdf->Ln(2);
+
+        // Durées
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->SetFillColor(220, 220, 220);
+        $pdf->Cell($availableWidth / 2, $rowHeight, 'DUREE PANNE', 1, 0, 'C', true);
+        $pdf->Cell($availableWidth / 2, $rowHeight, 'DUREE INTERVENTION', 1, 1, 'C', true);
+
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetFillColor(240, 240, 240);
+        $dowMinutes = $workOrder->getDowntimeTime() ?? 0;
+        $intMinutes = $workOrder->getInterventionTime() ?? 0;
+
+        $pdf->Cell($availableWidth / 2, $rowHeight, $this->minutesToHhMm($dowMinutes), 1, 0, 'C', true);
+        $pdf->Cell($availableWidth / 2, $rowHeight, $this->minutesToHhMm($intMinutes), 1, 1, 'C', true);
+
+        $pdf->Ln(5);
+    }
 
 
-        });
+    /**
+     * Formate une DateTime pour l'affichage dans le PDF
+     * Format: "Lun. 19/01/2026\n11:26"
+     */
+    private function formatDateTimeForPdf(?\DateTime $dateTime): string
+    {
+        if (!$dateTime) {
+            return '';
+        }
+
+        // Créer une locale française
+        $locale = 'fr_FR';
+
+        // Jour court (Lun., Mar., etc.)
+        $dayName = match((int)$dateTime->format('N')) {
+            1 => 'Lun.',
+            2 => 'Mar.',
+            3 => 'Mer.',
+            4 => 'Jeu.',
+            5 => 'Ven.',
+            6 => 'Sam.',
+            7 => 'Dim.',
+            default => '',
+        };
+
+        // Date au format d/m/Y et heure
+        $date = $dateTime->format('d/m/Y');
+        $time = $dateTime->format('H:i');
+
+        return $dayName . ' ' . $date . "\n" . $time;
+    }
 
 
-        // SECTION 3 : Informations techniques
-        $this->drawSection($pdf, "Technique & maintenance", function() use ($pdf, $workOrder) {
-            $pdf->Cell(95, 10, "Technicien(s): " . $workOrder->getTechnicianName(), 0, 0, 'C');
-            $pdf->Cell(95, 10, "Poste technique: " . $workOrder->getTechnicalPosition(), 0, 1, 'C');
-            $pdf->Cell(95, 10, "Domaine: " . $workOrder->getFieldIntervention(), 0, 0, 'C');
-            $pdf->Cell(95, 10, "Type de maintenance: " . $workOrder->getMaintenanceType(), 0, 1, 'C');
-        });
 
-        // SECTION 4 : Commentaire
-        $this->drawSection($pdf, "Commentaires / Observations", function() use ($pdf, $workOrder) {
-            $pdf->MultiCell(0, 10, $workOrder->getAdditionalDetails(), 0, 'C');
-        });
+    private function drawTechnicalDescriptionSection(TCPDF $pdf, WorkOrder $workOrder): void
+    {
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFillColor(0, 32, 96); // Bleu foncé
+        $pdf->Cell(0, 8, 'DESCRIPTIF INTERVENTION TECHNIQUE', 0, 1, 'C', true);
 
-        $this->drawSection($pdf, "Plan Électrique", function() use ($pdf, $workOrder) {
-            $pdf->Cell(0, 10, "Est-ce qu'il y a un plan éléc ? : " . ($workOrder->isElecPlan() ? 'Oui' : 'Non'), 0, 1, 'C');
-            $pdf->Cell(0, 10, "Est-ce qu'il y a des modifications au plan élec ? : " . ($workOrder->isChangedElecPlan() ? 'Oui' : 'Non'), 0, 1, 'C');
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Ln(3);
 
-            if ($workOrder->getElecPlanPicture()) {
-                $imagePath = $_SERVER['DOCUMENT_ROOT'] . $workOrder->getElecPlan();
-                if (file_exists($imagePath)) {
-                    $imgWidth = 50;
-                    $imgHeight = 0;
-                    $pageWidth = $pdf->getPageWidth() - $pdf->getMargins()['left'] - $pdf->getMargins()['right'];
-                    $x = ($pageWidth - $imgWidth) / 2 + $pdf->getMargins()['left'];
-                    $y = $pdf->GetY() + 5;
+        // Largeur dispo
+        $pageWidth = $pdf->getPageWidth();
+        $margins = $pdf->getMargins();
+        $availableWidth = $pageWidth - $margins['left'] - $margins['right'];
 
-                    $pdf->Image($imagePath, $x, $y, $imgWidth, $imgHeight);
-                    $pdf->Ln($imgHeight + 5); // laisse un peu d'espace après l'image
-                } else {
-                    $pdf->Cell(0, 10, "⚠️ Image non trouvée", 0, 1, 'C');
-                }
+        $descWidth = $availableWidth * 0.55;
+        $photoWidth = $availableWidth * 0.45;
+
+        // En-tête colonnes
+        $pdf->SetFillColor(100, 100, 100);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->Cell($descWidth, 8, 'DESCRIPTION INTERVENTION', 1, 0, 'C', true);
+        $pdf->Cell($photoWidth, 8, 'PHOTO(S)', 1, 1, 'C', true);
+
+        $startY = $pdf->GetY();
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 9);
+
+        // DESCRIPTION
+        $pdf->MultiCell($descWidth, 5, $workOrder->getInterventionDescription() ?? 'Aucune description', 1, 'L');
+
+        $endY = $pdf->GetY();
+        $cellHeight = max(40, $endY - $startY); // hauteur mini
+
+        // PHOTO
+        $photoPath = $workOrder->getDescriptionPhoto();
+        $photoX = $margins['left'] + $descWidth;
+
+        if ($photoPath && file_exists($this->getParameter('kernel.project_dir') . '/public' . $photoPath)) {
+            try {
+                $maxPhotoWidth = $photoWidth - 10;
+                $maxPhotoHeight = $cellHeight - 10;
+
+                $photoXPos = $photoX + ($photoWidth - $maxPhotoWidth) / 2;
+                $photoYPos = $startY + ($cellHeight - $maxPhotoHeight) / 2;
+
+                $pdf->Image(
+                    $this->getParameter('kernel.project_dir') . '/public' . $photoPath,
+                    $photoXPos,
+                    $photoYPos,
+                    $maxPhotoWidth,
+                    $maxPhotoHeight,
+                    '',
+                    '',
+                    '',
+                    false,
+                    300
+                );
+
+                // cadre
+                $pdf->Rect($photoX, $startY, $photoWidth, $cellHeight);
+            } catch (\Exception $e) {
+                $pdf->SetXY($photoX, $startY);
+                $pdf->SetFillColor(240, 240, 240);
+                $pdf->MultiCell($photoWidth, $cellHeight, "Erreur\nchargement", 1, 'C', true);
             }
-        });
+        } else {
+            $pdf->SetXY($photoX, $startY);
+            $pdf->SetFillColor(240, 240, 240);
+            $pdf->MultiCell($photoWidth, $cellHeight, "Aucune photo", 1, 'C', true);
+        }
 
-        $pdf->Ln(30);
-        $this->drawSection($pdf, "Pièce", function() use ($pdf, $workOrder) {
-            $pdf->Cell(0, 10, "Est-ce qu'il y a une pièce ? : " . ($workOrder->isPiece() ? 'Oui' : 'Non'), 0, 1, 'C');
-            $pdf->Cell(0, 10, "Est-ce qu'il y a besoin d'une pièce ? : " . ($workOrder->isPieceNeeded() ? 'Oui' : 'Non'), 0, 1, 'C');
-        });
-
-        $pdf->Output($filePath, 'F');
+        $pdf->SetY($startY + $cellHeight + 3);
+        $pdf->Ln(3);
+    }
 
 
-        $pdf->Output($filePath, 'F');
+    private function drawSparePartSection(TCPDF $pdf, WorkOrder $workOrder): void
+    {
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFillColor(0, 32, 96); // Bleu foncé
+        $pdf->Cell(0, 8, 'GESTION MAGASIN PIECES DE RECHANGE', 0, 1, 'C', true);
+
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Ln(3);
+
+        // Largeur dispo
+        $pageWidth = $pdf->getPageWidth();
+        $margins = $pdf->getMargins();
+        $availableWidth = $pageWidth - $margins['left'] - $margins['right'];
+
+        $col1Width = $availableWidth * 0.55;
+        $col2Width = $availableWidth * 0.225;
+        $col3Width = $availableWidth * 0.225;
+
+        // En-tête
+        $pdf->SetFillColor(100, 100, 100);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFont('helvetica', 'B', 8);
+
+        $pdf->Cell($col1Width, 8, 'SORTIE PIECES', 1, 0, 'C', true);
+        $pdf->Cell($col2Width, 8, 'NON', 1, 0, 'C', true);
+        $pdf->Cell($col3Width, 8, 'SI NON', 1, 1, 'C', true);
+
+        // Contenu
+        $pdf->SetFillColor(220, 220, 220);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 9);
+
+        $pdf->Cell($col1Width, 8, 'BESOIN A REPORTER DANS FICHIER SPARE PART LIST :', 1, 0, 'L', true);
+        $pdf->Cell($col2Width, 8, $workOrder->isPieceIssued() ? 'OUI' : 'NON', 1, 0, 'C', true);
+        $pdf->Cell($col3Width, 8, $workOrder->getIfPieceNotIssued(), 1, 1, 'C', true);
+
+        // Remarque
+        $pdf->Cell($col1Width, 8, 'Remarque :', 1, 0, 'L', true);
+
+        $pdf->Ln(5);
+    }
+
+
+
+    private function getMonthName(\DateTimeInterface $date = null): string
+    {
+        if (!$date) return 'N/A';
+
+        $months = ['', 'JANVIER', 'FEVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
+            'JUILLET', 'AOUT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DECEMBRE'];
+        return $months[(int)$date->format('n')];
     }
 }

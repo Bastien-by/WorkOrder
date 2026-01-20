@@ -3,54 +3,138 @@
 {% block title %}Générateur d'ordre de travail{% endblock %}
 
 {% block body %}
-{{ form_start(WorkOrderRequestForm) }}
-    <div class="container mt-4">
-        <div class="row justify-content-center text-center">
-            <div class="col-lg-8">
-                <h1>Créer un ordre de travail</h1>
-            </div>
+
+<!-- Flash Messages SIMPLE (sans dépendance Bootstrap JS) -->
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+             role="alert"
+             id="flash-alert-{{ loop.index }}"
+             style="z-index: 9999; min-width: 400px;">
+            <i class="fas fa-{{ label == 'success' ? 'check-circle' : 'exclamation-circle' }} me-2"></i>
+            <strong>{{ message }}</strong>
+            <button type="button" class="btn-close" onclick="closeAlert('flash-alert-{{ loop.index }}')" aria-label="Close"></button>
         </div>
+    {% endfor %}
+{% endfor %}
 
-        <div class="text-center mt-4">
-            <h4>Demande Intervention</h4>
-        </div>
+<!-- Script simplifié -->
+<script>
+    // Fonction pour fermer manuellement
+    function closeAlert(id) {
+        const alert = document.getElementById(id);
+        if (alert) {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }
+    }
 
-        <div class="row justify-content-center mt-4">
-            <div class="col-md-3">
-                {{ form_label(WorkOrderRequestForm.intervention_requester) }}
-                {{ form_widget(WorkOrderRequestForm.intervention_requester, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderRequestForm.intervention_requester) }}
-            </div>
-            <div class="col-md-3">
-                {{ form_label(WorkOrderRequestForm.intervention_request_date) }}
-                {{ form_widget(WorkOrderRequestForm.intervention_request_date, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderRequestForm.intervention_request_date) }}
-            </div>
-            <div class="col-md-3">
-                {{ form_label(WorkOrderRequestForm.machine_name) }}
-                {{ form_widget(WorkOrderRequestForm.machine_name, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderRequestForm.machine_name) }}
-            </div>
-        </div>
+    // Auto-fermeture après 5 secondes
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('[id^="flash-alert-"]');
 
-        <div class="text-center mt-5">
-            <h4>Descriptif Intervention Technique</h4>
-        </div>
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }, 5000);
+        });
+    });
+</script>
 
-        <div class="row justify-content-center mt-3">
-            <div class="col-md-8">
-                {{ form_label(WorkOrderRequestForm.technical_details) }}
-                {{ form_widget(WorkOrderRequestForm.technical_details, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderRequestForm.technical_details) }}
-            </div>
-        </div>
+<!-- Auto-dismiss après 5 secondes -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000); // 5 secondes
+        });
+    });
+</script>
 
 
+<div class="container py-5">
+    {{ form_start(WorkOrderRequestForm) }}
 
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary">Créer</button>
+    <!-- En-tête principal -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8 text-center">
+            <h1 class="display-5 fw-bold text-primary">
+                Créer un ordre de travail
+            </h1>
+            <p class="text-muted">Remplissez les champs ci-dessous pour initier une intervention</p>
         </div>
     </div>
-{{ form_end(WorkOrderRequestForm) }}
 
+    <!-- Section 1 : Demande d'intervention -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary py-3">
+            <h4 class="mb-0 text-secondary">
+                <i class="fas fa-user me-2"></i>Demande d'intervention
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-3 col-md-6">
+                    {{ form_label(WorkOrderRequestForm.intervention_requester, 'Demandeur', {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                    {{ form_widget(WorkOrderRequestForm.intervention_requester, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderRequestForm.intervention_requester) }}
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    {{ form_label(WorkOrderRequestForm.intervention_request_date, 'Date de la demande', {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                    {{ form_widget(WorkOrderRequestForm.intervention_request_date, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderRequestForm.intervention_request_date) }}
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    {{ form_label(WorkOrderRequestForm.sector, 'Secteur', {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                    {{ form_widget(WorkOrderRequestForm.sector, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderRequestForm.sector) }}
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    {{ form_label(WorkOrderRequestForm.machine_name, 'Machine', {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                    {{ form_widget(WorkOrderRequestForm.machine_name, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderRequestForm.machine_name) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2 : Description de la panne -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary py-3">
+            <h4 class="mb-0 text-secondary">
+                <i class="fas fa-wrench me-2"></i>Description de la panne
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-12">
+                    {{ form_label(WorkOrderRequestForm.technical_details, 'Description', {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                    {{ form_widget(WorkOrderRequestForm.technical_details, {
+                        'attr': {
+                            'class': 'form-control',
+                            'rows': 4,
+                            'placeholder': 'Décrivez la panne, les symptômes observés, les tests effectués...'
+                        }
+                    }) }}
+                    {{ form_errors(WorkOrderRequestForm.technical_details) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton de soumission -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8 text-center">
+            <button type="submit" class="btn btn-success px-5 py-2 fs-5 shadow-sm">
+                <i class="fas fa-check-circle me-2"></i>Créer l'ordre de travail
+            </button>
+        </div>
+    </div>
+
+    {{ form_end(WorkOrderRequestForm) }}
+</div>
 {% endblock %}

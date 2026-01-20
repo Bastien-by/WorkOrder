@@ -55,12 +55,19 @@ class PdfController extends AbstractController
             return $match;
         });
 
-        // Génération des noms de fichiers attendus
+        // Génération des noms de fichiers attendus (FORMAT UNIFIÉ avec secteur)
         $getFileName = function (WorkOrder $order) use ($pdfDirectory) {
             $id = $order->getId();
+            $sector = $order->getSector();
             $machine = $order->getMachineName();
             $date = $order->getInterventionRequestDate()?->format('d-m-Y');
-            $filename = "{$id}-{$machine}-{$date}-ot.pdf";
+
+            // Nettoie les valeurs
+            $sectorClean = str_replace(' ', '_', $sector ?? 'NO_SECTOR');
+            $machineClean = str_replace(' ', '_', $machine ?? 'NO_MACHINE');
+
+            // Format unique : {id}-{sector}-{machine}-{date}-ot.pdf
+            $filename = "{$id}-{$sectorClean}-{$machineClean}-{$date}-ot.pdf";
 
             return file_exists("$pdfDirectory/$filename") ? $filename : null;
         };

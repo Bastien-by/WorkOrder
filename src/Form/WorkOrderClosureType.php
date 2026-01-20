@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\File;
 
 class WorkOrderClosureType extends AbstractType
 {
@@ -20,31 +21,31 @@ class WorkOrderClosureType extends AbstractType
         $builder
             ->add('downtimeStartTime', DateTimeType::class, [
                 'label' => 'Début de la panne',
-                'required' => true,
+                'required' => false,
                 'widget' => 'single_text',
                 'input' => 'datetime',
-                'attr' => ['style' => 'width: 180px; display: inline-block;'],
+                'attr' => ['style' => 'width: 200px; display: inline-block;'],
             ])
             ->add('downtimeEndTime', DateTimeType::class, [
                 'label' => 'Fin de la panne',
-                'required' => true,
+                'required' => false,
                 'widget' => 'single_text',
                 'input' => 'datetime',
-                'attr' => ['style' => 'width: 180px; display: inline-block;'],
+                'attr' => ['style' => 'width: 200px; display: inline-block;'],
             ])
             ->add('interventionStartTime', DateTimeType::class, [
                 'label' => 'Début de l\'intervention',
                 'required' => true,
                 'widget' => 'single_text',
                 'input' => 'datetime',
-                'attr' => ['style' => 'width: 180px; display: inline-block;'],
+                'attr' => ['style' => 'width: 200px; display: inline-block;'],
             ])
             ->add('interventionEndTime', DateTimeType::class, [
                 'label' => 'Fin de l\'intervention',
                 'required' => true,
                 'widget' => 'single_text',
                 'input' => 'datetime',
-                'attr' => ['style' => 'width: 180px; display: inline-block;'],
+                'attr' => ['style' => 'width: 200px; display: inline-block;'],
             ])
             ->add('fieldIntervention', ChoiceType::class, [
                 'choices' => [
@@ -65,72 +66,81 @@ class WorkOrderClosureType extends AbstractType
                 'required' => true,
                 'attr' => ['style' => 'width: 210px; display: inline-block;'],
             ])
-            ->add('technicalPosition', TextType::class, [
-                'label' => 'Poste technique',
+            ->add('technicianName', ChoiceType::class, [
+                'choices' => [
+                    ' IKHENTANE Hamid ' => ' IKHENTANE Hamid ',
+                    ' JECSI Richard ' => ' JECSI Richard ',
+                    ' DA COSTA Joao ' => 'DA COSTA Joao ',
+                    'PARMENTIER Philippe ' => 'PARMENTIER Philippe ',
+                    'HERVIEUX Baptiste ' => ' HERVIEUX Baptiste ',
+                    'NEAU-CADOT Samuel ' => ' NEAU-CADOT Samuel ',
+                    'BARRE Régis' => 'BARRE Régis'
+                ],
+                'placeholder' => 'Sélectionnez un technicien',
+                'label' => 'Technicien',
                 'required' => true,
-                'attr' => ['style' => 'width: 200px; display: inline-block;'],
+                'attr' => ['style' => 'width: 250px; display: inline-block;'],
             ])
-            ->add('technicianName', TextType::class, [
-                'label' => 'Nom du/des technicien(s)',
-                'required' => true,
-                'attr' => ['style' => 'width: 200px; display: inline-block;'],
-            ])
-            ->add('maintenanceType', TextType::class, [
+            ->add('maintenanceType', ChoiceType::class, [
+                'choices' => [
+                    'Corrective' => 'Corrective',
+                    'Préventive' => 'Préventive',
+                    'Amélioration Continue' => 'Amélioration Continue',
+                    'Réglementaire' => 'Réglementaire'
+                ],
                 'label' => 'Type de maintenance',
                 'required' => true,
                 'attr' => ['style' => 'width: 200px; display: inline-block;'],
             ])
-            ->add('additionalDetails', TextareaType::class, [
-                'label' => 'Commentaire / Observations',
+            ->add('interventionDescription', TextareaType::class, [
+                'label' => 'Description Intervention Technique',
                 'required' => false,
                 'attr' => ['class' => 'form-control'],
             ])
-            ->add('ElecPlan', ChoiceType::class, [
-                'label' => "Est-ce qu'il y a un plan éléctrique ?",
-                'choices' => [
-                    'Oui' => true,
-                    'Non' => false,
-                ],
-                'expanded' => true,  // boutons radio
-                'multiple' => false, // une seule sélection
-                'required' => true,
-            ])
-            ->add('changedElecPlan', ChoiceType::class, [
-                'label' => 'Plan électrique modifié ?',
-                'choices' => [
-                    'Oui' => true,
-                    'Non' => false,
-                ],
-                'expanded' => true,  // boutons radio
-                'multiple' => false, // une seule sélection
-                'required' => false,     // force Oui/Non
-                'placeholder' => false,
-            ])
-            ->add('elecPlanPicture', FileType::class, [
-                'label' => 'Plan électrique (image)',
-                'mapped' => false,
+            ->add('descriptionPhoto', FileType::class, [
+                'label' => 'Photo descriptive',
                 'required' => false,
+                'mapped' => false, // Important ! Le fichier n'est pas mappé directement à l'entité
+                'constraints' => [
+                    new File([
+                        'maxSize' => '5M',
+                        'mimeTypes' => [
+                            'image/jpeg',
+                            'image/png',
+                            'image/gif',
+                        ],
+                        'mimeTypesMessage' => 'Veuillez uploader une image valide (JPG, PNG, GIF)',
+                    ])
+                ],
+                'attr' => [
+                    'accept' => 'image/*',
+                    'class' => 'form-control'
+                ],
+                'help' => 'Photo explicative de l\'intervention (max 5Mo)'
             ])
-            ->add('Piece', ChoiceType::class, [
-            'label' => "Est-ce qu'il y a une pièce ?",
-            'choices' => [
-                'Oui' => true,
-                'Non' => false,
-            ],
-            'expanded' => true,  // boutons radio
-            'multiple' => false, // une seule sélection
-            'required' => true,
+            ->add('piece_issued', ChoiceType::class, [
+                'label' => 'Sortie pièce ?',
+                'choices' => [
+                    'Oui' => true,
+                    'Non' => false,
+                ],
+                'expanded' => true,  // Affiche des radio buttons
+                'multiple' => false, // Un seul choix possible
+                'required' => true,
+                'placeholder' => false, // Pas de choix vide
+                'attr' => ['class' => 'form-check'],
+                'label_attr' => ['class' => 'form-label fw-medium'],
             ])
-            ->add('PieceNeeded', ChoiceType::class, [
-            'label' => "Est-ce qu'une pièce est nécessaire ?",
-            'choices' => [
-                'Oui' => true,
-                'Non' => false,
-            ],
-            'expanded' => true,  // boutons radio
-            'multiple' => false, // une seule sélection
-            'required' => false,
-            ]);
+            ->add('ifPieceNotIssued', ChoiceType::class, [
+        'choices' => [
+            'Pièces non crées' => 'Pièces non crées',
+            'Plus de stock à recommander' => 'Plus de stock à recommander',
+            'Pas nécessaire' => 'Pas nécessaire'
+        ],
+        'label' => 'Raison pièces non crées',
+        'required' => true,
+        'attr' => ['style' => 'width: 200px; display: inline-block;'],
+        ]);
 
     }
 

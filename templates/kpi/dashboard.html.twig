@@ -1,101 +1,230 @@
 {% extends 'base.html.twig' %}
-{% block title %}Tableau de bord KPI{% endblock %}
+{% block title %}Dashboard KPI - Maintenance{% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <h1 class="text-center mb-5">Indicateurs de Performance (KPI)</h1>
+<div class="container-fluid py-4">
 
-    <div class="row g-4">
-        {# KPI : Total OT créés #}
-        <div class="col-md-4">
-            <div class="card shadow-sm border-primary">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-primary">Total OT créés</h5>
-                    <p class="display-4 fw-bold">{{ totalOrders }}</p>
-                </div>
-            </div>
-        </div>
+    <!-- En-tête -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">
+            <i class="fas fa-chart-line me-3"></i>Dashboard KPI Maintenance
+        </h1>
+        <p class="text-muted fs-5">Indicateurs de performance des interventions</p>
+    </div>
 
-        {# KPI : Total OT ouverts #}
-        <div class="col-md-4">
-            <div class="card shadow-sm border-success">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-success">Total OT ouverts</h5>
-                    <p class="display-4 fw-bold">{{ openOrders }}</p>
-                </div>
-            </div>
-        </div>
-
-        {# KPI : Total OT fermés #}
-        <div class="col-md-4">
-            <div class="card shadow-sm border-danger">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-danger">Total OT fermés</h5>
-                    <p class="display-4 fw-bold">{{ closedOrders }}</p>
+    <!-- Filtres période -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Secteur</label>
+                            <select name="sector" class="form-select">
+                                <option value="">Tous les secteurs</option>
+                                <option value="BATIMENT">BATIMENT</option>
+                                <option value="MOYEN GENERAUX">MOYEN GENERAUX</option>
+                                <option value="EXTERIEUR">EXTERIEUR</option>
+                                <option value="BLOCK 1">BLOCK 1</option>
+                                <option value="BLOCK 2">BLOCK 2</option>
+                                <option value="BLOCK 3">BLOCK 3</option>
+                                <option value="BLOCK 4">BLOCK 4</option>
+                                <option value="SSL1">SSL1</option>
+                                <option value="MACHINE TEST">MACHINE TEST</option>
+                                <option value="ASSEMBLAGE">ASSEMBLAGE</option>
+                                <option value="HPV1">HPV1</option>
+                                <option value="SOUFFLAGE">SOUFFLAGE</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-medium">Date début</label>
+                            <input type="date" name="date_start" class="form-control" value="{{ dateStart }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-medium">Date fin</label>
+                            <input type="date" name="date_end" class="form-control" value="{{ dateEnd }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Filtrer
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4 mt-4">
-        {# KPI : Temps moyen intervention #}
-        <div class="col-md-6">
-            <div class="card shadow-sm border-warning">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-warning">Temps moyen d'intervention</h5>
-                    <p class="display-4 fw-bold">{{ avgIntervention }}</p>
-                    <p class="text-muted">hh:mm</p>
+    <!-- LES 4 KPI PRINCIPAUX -->
+    <div class="row g-4 mb-5">
+
+        <!-- KPI 1 : MTTR (Mean Time To Repair) -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-lg border-0 h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-tools fa-3x opacity-75"></i>
+                    </div>
+                    <h6 class="text-uppercase fw-bold mb-3" style="letter-spacing: 1px;">MTTR</h6>
+                    <h2 class="display-3 fw-bold mb-2">{{ mttr }}</h2>
+                    <p class="mb-0 opacity-75">Temps moyen de réparation</p>
+                    <small class="d-block mt-2 opacity-50">
+                        <i class="fas fa-info-circle me-1"></i>Durée intervention moyenne
+                    </small>
                 </div>
             </div>
         </div>
 
-        {# KPI : Temps moyen de panne #}
-        <div class="col-md-6">
-            <div class="card shadow-sm border-info">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-info">Temps moyen de panne</h5>
-                    <p class="display-4 fw-bold">{{ avgDowntime }}</p>
-                    <p class="text-muted">hh:mm</p>
+        <!-- KPI 2 : MTBF (Mean Time Between Failures) -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-lg border-0 h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-clock fa-3x opacity-75"></i>
+                    </div>
+                    <h6 class="text-uppercase fw-bold mb-3" style="letter-spacing: 1px;">MTBF</h6>
+                    <h2 class="display-3 fw-bold mb-2">{{ mtbf }}</h2>
+                    <p class="mb-0 opacity-75">Temps moyen avant panne</p>
+                    <small class="d-block mt-2 opacity-50">
+                        <i class="fas fa-info-circle me-1"></i>Fiabilité des équipements
+                    </small>
                 </div>
             </div>
         </div>
+
+        <!-- KPI 3 : % Préventif -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-lg border-0 h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-white text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-shield-alt fa-3x opacity-75"></i>
+                    </div>
+                    <h6 class="text-uppercase fw-bold mb-3" style="letter-spacing: 1px;">% Préventif</h6>
+                    <h2 class="display-3 fw-bold mb-2">{{ preventiveRate }}%</h2>
+                    <p class="mb-0 opacity-75">Taux maintenance préventive</p>
+                    <small class="d-block mt-2 opacity-50">
+                        <i class="fas fa-info-circle me-1"></i>{{ preventiveCount }} / {{ totalInterventions }} interventions
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 4 : % Taux de Panne -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-lg border-0 h-100" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-body text-white text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x opacity-75"></i>
+                    </div>
+                    <h6 class="text-uppercase fw-bold mb-3" style="letter-spacing: 1px;">Taux de Panne</h6>
+                    <h2 class="display-3 fw-bold mb-2">{{ downtimeRate }}%</h2>
+                    <p class="mb-0 opacity-75">% temps en panne</p>
+                    <small class="d-block mt-2 opacity-50">
+                        <i class="fas fa-info-circle me-1"></i>{{ totalDowntimeHours }}h panne / {{ totalProductionHours }}h production
+                    </small>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    {# Statistiques mensuelles #}
-    <div class="row mt-5">
+    <!-- Détails par secteur -->
+    <div class="row">
         <div class="col-12">
-            <h3 class="text-center mb-4">Répartition mensuelle (12 derniers mois)</h3>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>Mois</th>
-                            <th class="text-center">OT ouverts</th>
-                            <th class="text-center">OT fermés</th>
-                            <th class="text-center">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for stat in monthlyStats %}
-                        <tr>
-                            <td>{{ stat.month_label }}</td>
-                            <td class="text-center text-success fw-bold">{{ stat.open_count }}</td>
-                            <td class="text-center text-danger fw-bold">{{ stat.closed_count }}</td>
-                            <td class="text-center">{{ stat.open_count + stat.closed_count }}</td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">Aucune donnée disponible</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-table me-2"></i>Détails par secteur
+                    </h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-bold">Secteur</th>
+                                    <th class="text-center fw-bold">Interventions</th>
+                                    <th class="text-center fw-bold">MTTR</th>
+                                    <th class="text-center fw-bold">MTBF</th>
+                                    <th class="text-center fw-bold">% Préventif</th>
+                                    <th class="text-center fw-bold">Taux Panne</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sector in sectorStats %}
+                                <tr>
+                                    <td class="fw-medium">
+                                        <i class="fas fa-industry text-primary me-2"></i>{{ sector.name }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">{{ sector.total_interventions }}</span>
+                                    </td>
+                                    <td class="text-center">{{ sector.mttr }}</td>
+                                    <td class="text-center">{{ sector.mtbf }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">{{ sector.preventive_rate }}%</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 25px;">
+                                            <div class="progress-bar
+                                                {% if sector.downtime_rate < 5 %}bg-success
+                                                {% elseif sector.downtime_rate < 10 %}bg-warning
+                                                {% else %}bg-danger{% endif %}"
+                                                role="progressbar"
+                                                style="width: {{ sector.downtime_rate }}%"
+                                                aria-valuenow="{{ sector.downtime_rate }}"
+                                                aria-valuemin="0"
+                                                aria-valuemax="100">
+                                                {{ sector.downtime_rate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                        Aucune donnée disponible pour la période sélectionnée
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="text-center mt-4">
-        <a href="{{ path('home.index') }}" class="btn btn-primary">Retour à l'accueil</a>
+    <!-- Footer actions -->
+    <div class="text-center mt-5">
+        <a href="{{ path('home.index') }}" class="btn btn-outline-secondary btn-lg px-5">
+            <i class="fas fa-arrow-left me-2"></i>Retour à l'accueil
+        </a>
+        <a href="{{ path('work_order_generator') }}" class="btn btn-primary btn-lg px-5 ms-3">
+            <i class="fas fa-plus-circle me-2"></i>Créer un OT
+        </a>
     </div>
+
 </div>
+
+<!-- Styles CSS additionnels -->
+<style>
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+    }
+    .display-3 {
+        font-size: 3rem;
+    }
+    .progress {
+        background-color: rgba(0,0,0,0.1);
+    }
+    .table th {
+        border-top: none;
+    }
+</style>
 {% endblock %}

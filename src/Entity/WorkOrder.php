@@ -20,14 +20,11 @@ class WorkOrder
     #[ORM\Column(length: 30, nullable: true)]
     private ?string $maintenance_type = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $intervention_date = null;
-
     #[ORM\Column(length: 30, nullable: true)]
     private ?string $machine_name = null;
 
     #[ORM\Column(length: 30, nullable: true)]
-    private ?string $technical_position = null;
+    private ?string $sector = null;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTime $downtime_start_time = null;
@@ -59,56 +56,21 @@ class WorkOrder
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $technical_details = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?bool $piece_issued = null;
-
-    #[ORM\Column(length: 30, nullable: true)]
-    private ?string $piece_type = null;
-
-    #[ORM\Column(length: 30, nullable: true)]
-    private ?string $piece_brand = null;
-
-    #[ORM\Column(length: 30, nullable: true)]
-    private ?string $sap_reference = null;
-
-    #[ORM\Column(nullable: true)]
-    private ?int $quantity = null;
-
-    #[ORM\Column(length: 30, nullable: true)]
-    private ?string $brand = null;
-
-    #[ORM\Column(length: 30, nullable: true)]
-    private ?string $type = null;
-
-    #[ORM\Column(length: 50, nullable: true)]
-    private ?string $size = null;
-
-    #[ORM\Column(length: 30, nullable: true)]
-    private ?string $manufacturer_reference = null;
-
-    #[ORM\Column(nullable: true)]
-    private ?int $created_piece_quantity = null;
-
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $additional_details = null;
+    private ?string $intervention_description = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $description_photo = null;
+
 
     #[ORM\Column(type: 'boolean', nullable: true)]
     private ?bool $status = null;
 
     #[ORM\Column(type: 'boolean', nullable: true)]
-    private ?bool $changedElecPlan = null;
+    private ?bool $piece_issued = null;
 
-    #[ORM\Column(type: 'boolean', nullable: true)]
-    private ?bool $ElecPlan = null;
-
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    private ?string $elecPlanPicture = null;
-
-    #[ORM\Column(type: 'boolean', nullable: true)]
-    private ?bool $Piece = null;
-
-    #[ORM\Column(type: 'boolean', nullable: true)]
-    private ?bool $PieceNeeded = null;
+    #[ORM\Column(length: 30, nullable: true)]
+    private ?string $if_piece_not_issued = null;
 
     public function getId(): ?int
     {
@@ -139,18 +101,6 @@ class WorkOrder
         return $this;
     }
 
-    public function getInterventionDate(): ?\DateTimeImmutable
-    {
-        return $this->intervention_date;
-    }
-
-    public function setInterventionDate(?\DateTimeImmutable $intervention_date): static
-    {
-        $this->intervention_date = $intervention_date;
-
-        return $this;
-    }
-
     public function getMachineName(): ?string
     {
         return $this->machine_name;
@@ -163,14 +113,14 @@ class WorkOrder
         return $this;
     }
 
-    public function getTechnicalPosition(): ?string
+    public function getSector(): ?string
     {
-        return $this->technical_position;
+        return $this->sector;
     }
 
-    public function setTechnicalPosition(?string $technical_position): static
+    public function setSector(?string $sector): static
     {
-        $this->technical_position = $technical_position;
+        $this->sector = $sector;
 
         return $this;
     }
@@ -305,62 +255,14 @@ class WorkOrder
         return $this;
     }
 
-    public function getPieceType(): ?string
+    public function getIfPieceNotIssued(): ?string
     {
-        return $this->piece_type;
+        return $this->if_piece_not_issued;
     }
 
-    public function setPieceType(?string $piece_type): static
+    public function setIfPieceNotIssued(?string $if_piece_not_issued): static
     {
-        $this->piece_type = $piece_type;
-
-        return $this;
-    }
-
-    public function getPieceBrand(): ?string
-    {
-        return $this->piece_brand;
-    }
-
-    public function setPieceBrand(?string $piece_brand): static
-    {
-        $this->piece_brand = $piece_brand;
-
-        return $this;
-    }
-
-    public function getSapReference(): ?string
-    {
-        return $this->sap_reference;
-    }
-
-    public function setSapReference(?string $sap_reference): static
-    {
-        $this->sap_reference = $sap_reference;
-
-        return $this;
-    }
-
-    public function getQuantity(): ?int
-    {
-        return $this->quantity;
-    }
-
-    public function setQuantity(?int $quantity): static
-    {
-        $this->quantity = $quantity;
-
-        return $this;
-    }
-
-    public function getBrand(): ?string
-    {
-        return $this->brand;
-    }
-
-    public function setBrand(?string $brand): static
-    {
-        $this->brand = $brand;
+        $this->if_piece_not_issued = $if_piece_not_issued;
 
         return $this;
     }
@@ -401,31 +303,35 @@ class WorkOrder
         return $this;
     }
 
-    public function getCreatedPieceQuantity(): ?int
+    public function getInterventionDescription(): ?string
     {
-        return $this->created_piece_quantity;
+        return $this->intervention_description;
     }
 
-    public function setCreatedPieceQuantity(?int $created_piece_quantity): static
+    public function setInterventionDescription(?string $intervention_description): static
     {
-        $this->created_piece_quantity = $created_piece_quantity;
+        $this->intervention_description = $intervention_description;
 
         return $this;
     }
 
-    public function getAdditionalDetails(): ?string
+    public function getDescriptionPhoto(): ?string
     {
-        return $this->additional_details;
+        return $this->description_photo;
     }
 
-    public function setAdditionalDetails(?string $additional_details): static
+    public function setDescriptionPhoto(?string $description_photo): static
     {
-        $this->additional_details = $additional_details;
+        $this->description_photo = $description_photo;
 
         return $this;
     }
 
     public function isStatus(): ?bool
+    {
+        return $this->status;
+    }
+    public function getStatus(): ?bool
     {
         return $this->status;
     }
@@ -436,60 +342,4 @@ class WorkOrder
 
         return $this;
     }
-
-    public function isChangedElecPlan(): ?bool
-    {
-        return $this->changedElecPlan;
-    }
-
-    public function setChangedElecPlan(?bool $changedElecPlan): self
-    {
-        $this->changedElecPlan = $changedElecPlan;
-        return $this;
-    }
-    public function isElecPlan(): ?bool
-    {
-        return $this->ElecPlan;
-    }
-
-    public function setElecPlan(?bool $ElecPlan): self
-    {
-        $this->ElecPlan = $ElecPlan;
-        return $this;
-    }
-
-
-    public function getElecPlanPicture(): ?string
-    {
-        return $this->elecPlanPicture;
-    }
-
-    public function setElecPlanPicture(?string $elecPlanPicture): self
-    {
-        $this->elecPlanPicture = $elecPlanPicture;
-        return $this;
-    }
-
-    public function isPiece(): ?bool
-    {
-        return $this->Piece;
-    }
-
-    public function setPiece(?bool $Piece): self
-    {
-        $this->Piece = $Piece;
-        return $this;
-    }
-
-    public function isPieceNeeded(): ?bool
-    {
-        return $this->PieceNeeded;
-    }
-
-    public function setPieceNeeded(?bool $PieceNeeded): self
-    {
-        $this->ElecPlan = $PieceNeeded;
-        return $this;
-    }
-
 }

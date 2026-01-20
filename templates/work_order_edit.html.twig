@@ -1,264 +1,359 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}Clôture d'un OT{% endblock %}
 
 {% block body %}
-<div class="container mt-4 text-center">
-    <h1>Clôture d'un ordre de travail</h1>
-</div>
-{% if activePdfs is defined %}
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card border-primary mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <strong>📂 Ordres en cours</strong>
-                </div>
-                <ul class="list-group list-group-flush">
-                    {% for file in activePdfs %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <a href="{{ path('view_pdf', {'filename': file}) }}" target="_blank">
-                                    {{ file }}
+
+<!-- Flash Messages SIMPLE (sans dépendance Bootstrap JS) -->
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+             role="alert"
+             id="flash-alert-{{ loop.index }}"
+             style="z-index: 9999; min-width: 400px;">
+            <i class="fas fa-{{ label == 'success' ? 'check-circle' : 'exclamation-circle' }} me-2"></i>
+            <strong>{{ message }}</strong>
+            <button type="button" class="btn-close" onclick="closeAlert('flash-alert-{{ loop.index }}')" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<div class="container py-4">
+
+    <!-- Titre principal -->
+    <div class="text-center mb-4">
+        <h1 class="display-5 fw-bold text-primary">Clôture d'un ordre de travail</h1>
+        <p class="text-muted">Finalisez les informations techniques et l'intervention.</p>
+    </div>
+
+    <!-- Section : Ordres en cours -->
+    {% if activePdfs is defined and activePdfs is not null %}
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-10">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <strong>📂 Ordres de travail en cours</strong>
+                        {% if activePdfs|length > 0 %}
+                            <span class="badge bg-dark text-primary">{{ activePdfs|length }}</span>
+                        {% endif %}
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for file in activePdfs %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{{ path('view_pdf', {'filename': file}) }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>{{ file }}
                                 </a>
-                            </div>
-                            {% set id = file|split('-')|first %}
-                            <div class="btn-group">
+                                {% set id = file|split('-')|first %}
                                 <a href="{{ path('work_order_edit', {'id': id}) }}" class="btn btn-sm btn-primary">
-                                    Fermer
+                                    <i class="fas fa-edit me-1"></i>Fermer
                                 </a>
-                            </div>
-                        </li>
-                    {% else %}
-                        <li class="list-group-item text-muted text-center">Aucun OT en cours</li>
-                    {% endfor %}
-                </ul>
+                            </li>
+                        {% else %}
+                            <li class="list-group-item text-center text-muted">Aucun OT en cours</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
-    </div>
-{% endif %}
+    {% endif %}
 
-
-
-{% if workOrder is defined %}
-    <div class="container mt-3 text-center">
-        <a href="{{ path('work_order_edit_list') }}" class="btn btn-primary">
-            Retour à la liste des OT à clôturer
+    <!-- Bouton retour (si on est en mode édition) -->
+    {% if workOrder is defined and workOrder is not null %}
+    <div class="text-center mb-4">
+        <a href="{{ path('work_order_edit_list') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste des OT
         </a>
     </div>
+    {% endif %}
 
-    <div class="container-fluid mt-5 text-center">
-        <h4>📋 Détails de l'ordre de travail</h4>
-    </div>
-
-    <div class="row justify-content-around mt-4 text-center">
-        <div class="col-4">
-            <label class="form-label fw-bold">Demandeur</label>
-            <div class="form-control border-0 bg-light">{{ workOrder.interventionRequester }}</div>
+    <!-- Détails de l'OT (lecture seule) -->
+    {% if workOrder is defined and workOrder is not null %}
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>Détails de l'ordre de travail #{{ workOrder.id }}
+            </h4>
         </div>
-        <div class="col-4">
-            <label class="form-label fw-bold">Date de la demande</label>
-            <div class="form-control border-0 bg-light">
-                {{ workOrder.interventionRequestDate ? workOrder.interventionRequestDate|date('d/m/Y') : 'Non renseignée' }}
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-dark">Demandeur</label>
+                    <div class="form-control bg-light border-0 text-dark">{{ workOrder.interventionRequester }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-dark">Date de la demande</label>
+                    <div class="form-control bg-light border-0 text-dark">
+                        {{ workOrder.interventionRequestDate ? workOrder.interventionRequestDate|date('d/m/Y') : 'Non renseignée' }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-dark">Secteur</label>
+                    <div class="form-control bg-light border-0 text-dark">{{ workOrder.sector ?? 'Non renseigné' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium text-dark">Machine</label>
+                    <div class="form-control bg-light border-0 text-dark">{{ workOrder.machineName ?? 'Non renseignée' }}</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-medium text-dark">Descriptif technique</label>
+                    <div class="form-control bg-light border-0 text-dark" style="min-height: 60px;">
+                        {{ workOrder.technicalDetails ?? 'Aucune description' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulaire de clôture -->
+    {% if WorkOrderClosureForm is defined and WorkOrderClosureForm is not null %}
+    {{ form_start(WorkOrderClosureForm, {'attr': {'class': 'needs-validation', 'novalidate': false, 'enctype': 'multipart/form-data'}}) }}
+
+    <!-- Informations sur la panne -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">Informations sur la panne</h4>
+        </div>
+        <div class="card-body">
+            <!-- Ligne 1 : Les 3 informations techniques -->
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        {{ form_label(WorkOrderClosureForm.fieldIntervention, "Domaine d'intervention", {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_widget(WorkOrderClosureForm.fieldIntervention, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(WorkOrderClosureForm.fieldIntervention) }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form_label(WorkOrderClosureForm.technicianName, 'Technicien(s)', {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_widget(WorkOrderClosureForm.technicianName, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(WorkOrderClosureForm.technicianName) }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form_label(WorkOrderClosureForm.maintenanceType, 'Type de maintenance', {'label_attr': {'class': 'form-label'}}) }}
+                        {{ form_widget(WorkOrderClosureForm.maintenanceType, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(WorkOrderClosureForm.maintenanceType) }}
+                    </div>
+                </div>
+            <!-- Ligne 2 : Les 4 dates/heures -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    {{ form_label(WorkOrderClosureForm.downtimeStartTime, 'Début de la panne', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(WorkOrderClosureForm.downtimeStartTime, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderClosureForm.downtimeStartTime) }}
+                </div>
+                <div class="col-md-3">
+                    {{ form_label(WorkOrderClosureForm.downtimeEndTime, 'Fin de la panne', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(WorkOrderClosureForm.downtimeEndTime, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderClosureForm.downtimeEndTime) }}
+                </div>
+                <div class="col-md-3">
+                    {{ form_label(WorkOrderClosureForm.interventionStartTime, "Début de l'intervention", {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(WorkOrderClosureForm.interventionStartTime, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderClosureForm.interventionStartTime) }}
+                </div>
+                <div class="col-md-3">
+                    {{ form_label(WorkOrderClosureForm.interventionEndTime, "Fin de l'intervention", {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(WorkOrderClosureForm.interventionEndTime, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderClosureForm.interventionEndTime) }}
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row justify-content-around mt-4 text-center">
-        <div class="col-4">
-            <label class="form-label fw-bold">Machine</label>
-            <div class="form-control border-0 bg-light">{{ workOrder.machineName }}</div>
+    <!-- Description Intervention Technique -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">Description Intervention Technique</h4>
         </div>
-        <div class="col-4">
-            <label class="form-label fw-bold">Descriptif technique</label>
-            <div class="form-control border-0 bg-light">{{ workOrder.technicalDetails }}</div>
-        </div>
-    </div>
-{% endif %}
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Description texte -->
+                <div class="col-12">
+                    {{ form_label(WorkOrderClosureForm.interventionDescription, 'Description Intervention', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(WorkOrderClosureForm.interventionDescription, {
+                        'attr': {'class': 'form-control', 'rows': 4, 'placeholder': 'Décrivez l\'intervention réalisée en détail...'}
+                    }) }}
+                    {{ form_errors(WorkOrderClosureForm.interventionDescription) }}
+                </div>
 
+                <!-- Photo descriptive (input fichier) -->
+                <div class="col-12">
+                    {{ form_label(WorkOrderClosureForm.descriptionPhoto, 'Photo descriptive', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(WorkOrderClosureForm.descriptionPhoto, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(WorkOrderClosureForm.descriptionPhoto) }}
+                    <small class="form-text text-muted">Photo explicative de l'intervention (JPG, PNG, GIF - max 5Mo)</small>
+                </div>
 
-{% if WorkOrderClosureForm %}
-    {{ form_start(WorkOrderClosureForm) }}
-
-    <div class="container-fluid mt-5 text-center">
-        <h4>🛠️ Informations sur la panne</h4>
-    </div>
-
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.downtimeStartTime) }}
-            {{ form_widget(WorkOrderClosureForm.downtimeStartTime, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.downtimeStartTime) }}
-        </div>
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.interventionStartTime) }}
-            {{ form_widget(WorkOrderClosureForm.interventionStartTime, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.interventionStartTime) }}
-        </div>
-    </div>
-
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.downtimeEndTime) }}
-            {{ form_widget(WorkOrderClosureForm.downtimeEndTime, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.downtimeEndTime) }}
-        </div>
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.interventionEndTime) }}
-            {{ form_widget(WorkOrderClosureForm.interventionEndTime, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.interventionEndTime) }}
-        </div>
-    </div>
-
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.fieldIntervention) }}
-            {{ form_widget(WorkOrderClosureForm.fieldIntervention, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.fieldIntervention) }}
-        </div>
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.technicalPosition) }}
-            {{ form_widget(WorkOrderClosureForm.technicalPosition, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.technicalPosition) }}
-        </div>
-    </div>
-
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.technicianName) }}
-            {{ form_widget(WorkOrderClosureForm.technicianName, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.technicianName) }}
-        </div>
-        <div class="col-md-3">
-            {{ form_label(WorkOrderClosureForm.maintenanceType) }}
-            {{ form_widget(WorkOrderClosureForm.maintenanceType, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.maintenanceType) }}
-        </div>
-    </div>
-
-    <div class="container-fluid mt-5 text-center">
-        <h4>📝 Commentaires</h4>
-    </div>
-
-    <div class="row justify-content-center mt-3">
-        <div class="col-md-6">
-            {{ form_label(WorkOrderClosureForm.additionalDetails) }}
-            {{ form_widget(WorkOrderClosureForm.additionalDetails, {'attr': {'class': 'form-control'}}) }}
-            {{ form_errors(WorkOrderClosureForm.additionalDetails) }}
-        </div>
-    </div>
-
-    <div class="text-center mt-5">
-        <h4>📥 Plan électrique</h4>
-    </div>
-
-    {# Radios ElecPlan toujours visibles #}
-    <div class="row justify-content-center mt-3">
-        <div class="col-md-6 text-center" id="elec-plan-group">
-            {{ form_label(WorkOrderClosureForm.ElecPlan) }}
-            {{ form_widget(WorkOrderClosureForm.ElecPlan) }}
-            {{ form_errors(WorkOrderClosureForm.ElecPlan) }}
-        </div>
-    </div>
-
-    {# Conteneur des champs dépendants — masqué par défaut #}
-    {% set hasElecPlan = WorkOrderClosureForm.ElecPlan.vars.data ?? false %}
-    <div class="container mt-3" id="elec-dependent" style="display: {{ hasElecPlan ? 'block' : 'none' }};">
-        <div class="row justify-content-center">
-            <div class="col-md-12 text-center">
-                {{ form_label(WorkOrderClosureForm.changedElecPlan) }}
-                {{ form_widget(WorkOrderClosureForm.changedElecPlan) }}
-                {{ form_errors(WorkOrderClosureForm.changedElecPlan) }}
-            </div>
-        </div>
-
-        <div class="row justify-content-center mt-3">
-            <div class="col-md-6">
-                {{ form_label(WorkOrderClosureForm.elecPlanPicture) }}
-                {{ form_widget(WorkOrderClosureForm.elecPlanPicture, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(WorkOrderClosureForm.elecPlanPicture) }}
+                <!-- Affichage de la photo existante -->
+                {% if workOrder is defined and workOrder.descriptionPhoto %}
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Photo actuelle :</label>
+                        <div>
+                            <img src="{{ asset(workOrder.descriptionPhoto) }}" alt="Photo descriptive" class="img-thumbnail shadow-sm" style="max-width: 400px; max-height: 300px;">
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <div class="text-center mt-5">
-      <h4>⚙️ Pièce</h4>
-    </div>
-
-    {# Radios "Pièce disponible ?" toujours visibles #}
-    <div class="row justify-content-center mt-3">
-      <div class="col-md-6 text-center" id="piece-group">
-        {{ form_label(WorkOrderClosureForm.Piece) }}
-        {{ form_widget(WorkOrderClosureForm.Piece) }}
-        {{ form_errors(WorkOrderClosureForm.Piece) }}
-      </div>
-    </div>
-
-    {# Dépendant: afficher UNIQUEMENT quand Piece == false (Non) #}
-    {% set hasNoPiece = (WorkOrderClosureForm.Piece.vars.data ?? null) is same as(false) %}
-    <div class="container mt-3" id="piece-dependent" style="display: {{ hasNoPiece ? 'block' : 'none' }};">
-      <div class="row justify-content-center">
-        <div class="col-md-12 text-center">
-          {{ form_label(WorkOrderClosureForm.PieceNeeded) }}
-          {{ form_widget(WorkOrderClosureForm.PieceNeeded) }}
-          {{ form_errors(WorkOrderClosureForm.PieceNeeded) }}
+    <!-- Gestion Magasin -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">
+                <i class="fas fa-warehouse me-2"></i>Gestion Magasin
+            </h4>
         </div>
-      </div>
+        <div class="card-body">
+            <div class="row g-4 align-items-start">
+                <!-- Sortie de pièce -->
+                <div class="col-md-4">
+                    {{ form_label(WorkOrderClosureForm.piece_issued, 'Sortie de pièce ?', {
+                        'label_attr': {'class': 'form-label fw-medium mb-3'}
+                    }) }}
+                    <div class="d-flex gap-3">
+                        {% for choice in WorkOrderClosureForm.piece_issued %}
+                            <div class="form-check">
+                                {{ form_widget(choice, {'attr': {'class': 'form-check-input'}}) }}
+                                {{ form_label(choice, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {{ form_errors(WorkOrderClosureForm.piece_issued) }}
+                </div>
+
+                <!-- Si non : Remarque -->
+                <div class="col-md-8" id="ifPieceNotIssued-container" style="display: none;">
+                    {{ form_label(WorkOrderClosureForm.ifPieceNotIssued, 'Raison / Remarque', {
+                        'label_attr': {'class': 'form-label fw-medium'}
+                    }) }}
+                    {{ form_widget(WorkOrderClosureForm.ifPieceNotIssued, {
+                        'attr': {
+                            'class': 'form-control',
+                            'rows': 3,
+                            'placeholder': 'Précisez pourquoi aucune pièce n\'a été sortie...'
+                        }
+                    }) }}
+                    {{ form_errors(WorkOrderClosureForm.ifPieceNotIssued) }}
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>Besoin à reporter dans le fichier Spare Part List
+                    </small>
+                </div>
+            </div>
+
+            <!-- Section obligatoire : Accès au fichier Spare Part -->
+            <!--<div class="row g-3 mt-4">
+                <div class="col-12">
+                    <div class="alert alert-warning border-start border-5 border-warning">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Action obligatoire
+                        </h5>
+                        <p class="mb-3">
+                            Avant de clôturer cet ordre de travail, vous devez <strong>consulter le fichier Spare Part List</strong>
+                            et y renseigner les informations nécessaires.
+                        </p>
+
+                        <a href="https://15041946.sharepoint.com/:x:/r/sites/FS-COM_PLANT/Shared%20Documents/SCOMWP0015/groups/02-STI%20NEW%20ENERGY/10-MAGASIN%20PIECES%20DE%20RECHANGES/02-PIECES%20DE%20RECHANGES/02-LISTE%20PIECES%20DE%20RECHANGES%20GENERALES%20USINE/LISTE%20PIECES%20DE%20RECHANGES%20USINE.xlsx?d=w9df551cd9d01452eb27406f37d975d2c&csf=1&web=1&e=d3gofK"
+                           target="_blank"
+                           id="sparePartLink"
+                           class="btn btn-warning btn-lg mb-3">
+                            <i class="fas fa-external-link-alt me-2"></i>Ouvrir le fichier Spare Part List
+                        </a>
+
+                        <div class="form-check mt-3">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="confirmSparePartAccess"
+                                   required>
+                            <label class="form-check-label fw-medium" for="confirmSparePartAccess">
+                                Je confirme avoir consulté et rempli le fichier Spare Part List
+                            </label>
+                        </div>
+                    </div>
+                </div>-->
+            </div>
+        </div>
     </div>
 
-
-
-    {# Bouton de soumission — HORS du conteneur conditionnel #}
-    <div class="text-center mt-4">
-        <button type="submit" class="btn btn-success">✅ Clôturer l'ordre</button>
+    <!-- Bouton de soumission -->
+    <div class="text-center my-4">
+        <button type="submit"
+                class="btn btn-primary btn-lg px-5 py-3">
+            <i class="fas fa-check-circle me-2"></i> Clôturer l'ordre de travail
+        </button>
+        <!--<div id="warningMessage" class="text-danger mt-2 fw-medium">
+            <i class="fas fa-info-circle me-1"></i>Vous devez ouvrir le fichier Spare Part et cocher la confirmation
+        </div>-->
     </div>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Helper générique: teste si un groupe radios est coché sur "Oui"
-      function isYesChecked(container) {
-        const radios = container ? container.querySelectorAll('input[type="radio"]') : [];
-        return Array.from(radios).some(r =>
-          r.checked && (r.value === '1' || r.value === 'true' || r.value === 'on')
-        );
-      }
-
-      // Helper: au moins une option sélectionnée ?
-      function hasAnySelection(container) {
-        const radios = container ? container.querySelectorAll('input[type="radio"]') : [];
-        return Array.from(radios).some(r => r.checked);
-      }
-
-      // 1) ElecPlan: afficher #elec-dependent quand ElecPlan == Oui
-      const elecGroup = document.getElementById('elec-plan-group');
-      const elecDependent = document.getElementById('elec-dependent');
-
-      function updateElec() {
-        if (!elecGroup || !elecDependent) return;
-        elecDependent.style.display = isYesChecked(elecGroup) ? 'block' : 'none';
-      }
-
-      elecGroup && elecGroup.addEventListener('change', updateElec);
-
-      // 2) Pièce: afficher #piece-dependent uniquement quand Piece == Non
-      const pieceGroup = document.getElementById('piece-group');
-      const pieceDependent = document.getElementById('piece-dependent');
-
-      function updatePiece() {
-        if (!pieceGroup || !pieceDependent) return;
-        const any = hasAnySelection(pieceGroup);
-        const yes = isYesChecked(pieceGroup);
-        // Afficher seulement si une sélection est faite ET que c'est Non
-        pieceDependent.style.display = (any && !yes) ? 'block' : 'none';
-      }
-
-      pieceGroup && pieceGroup.addEventListener('change', updatePiece);
-
-      // Initialiser l'état à l'ouverture
-      updateElec();
-      updatePiece();
-    });
-    </script>
 
     {{ form_end(WorkOrderClosureForm) }}
-{% endif %}
+    {% endif %}
 
+</div>
+
+<!-- Scripts JS -->
+<script>
+    // Fonction pour fermer manuellement les flash messages
+    function closeAlert(id) {
+        const alert = document.getElementById(id);
+        if (alert) {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-fermeture des flash messages après 5 secondes
+        const alerts = document.querySelectorAll('[id^="flash-alert-"]');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }, 5000);
+        });
+
+        // Affichage conditionnel piece_issued
+        const pieceIssuedRadios = document.querySelectorAll('input[name="work_order_closure[piece_issued]"]');
+        const ifNotIssuedContainer = document.getElementById('ifPieceNotIssued-container');
+
+        if (pieceIssuedRadios.length > 0 && ifNotIssuedContainer) {
+            function toggleIfNotIssued() {
+                const selectedValue = document.querySelector('input[name="work_order_closure[piece_issued]"]:checked');
+
+                if (selectedValue && selectedValue.value === '0') {
+                    ifNotIssuedContainer.style.display = 'block';
+                } else {
+                    ifNotIssuedContainer.style.display = 'none';
+                }
+            }
+
+            pieceIssuedRadios.forEach(radio => {
+                radio.addEventListener('change', toggleIfNotIssued);
+            });
+
+            toggleIfNotIssued();
+        }
+
+        // Gestion conditionnelle radio buttons (existant)
+        function isYesChecked(container) {
+            const radios = container?.querySelectorAll('input[type="radio"]');
+            return Array.from(radios || []).some(r => r.checked && ['1', 'true', 'on'].includes(r.value));
+        }
+
+        function hasAnySelection(container) {
+            const radios = container?.querySelectorAll('input[type="radio"]');
+            return Array.from(radios || []).some(r => r.checked);
+        }
+
+        const pieceGroup = document.getElementById('piece-group');
+        const pieceDependent = document.getElementById('piece-dependent');
+
+        function updatePiece() {
+            if (!pieceGroup || !pieceDependent) return;
+            pieceDependent.style.display = (hasAnySelection(pieceGroup) && !isYesChecked(pieceGroup)) ? 'block' : 'none';
+        }
+
+        pieceGroup?.addEventListener('change', updatePiece);
+        updatePiece();
+    });
+</script>
 {% endblock %}
